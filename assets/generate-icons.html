@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<title>CarbonTrack — Générateur d'icônes</title>
+<style>
+  body{font-family:sans-serif;background:#0f172a;color:#fff;padding:40px;text-align:center;}
+  h1{color:#4ade80;margin-bottom:8px;}
+  p{color:rgba(255,255,255,.6);margin-bottom:30px;}
+  .grid{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;margin-bottom:30px;}
+  .card{background:rgba(255,255,255,.07);border-radius:12px;padding:16px;text-align:center;}
+  .card small{display:block;color:rgba(255,255,255,.4);font-size:11px;margin-top:6px;}
+  canvas{display:block;border-radius:12px;}
+  button{background:#22c55e;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin:4px;}
+  button:hover{background:#16a34a;}
+  .dl-all{background:#1d4ed8;font-size:15px;padding:14px 36px;border-radius:10px;margin-top:10px;}
+  .note{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:10px;padding:16px;max-width:600px;margin:0 auto 30px;font-size:13px;color:#86efac;line-height:1.7;}
+</style>
+</head>
+<body>
+
+<h1>🍃 CarbonTrack — Générateur d'icônes</h1>
+<p>Ouvrez cette page dans Chrome, cliquez "Télécharger tout" et copiez les PNG dans le dossier <strong>mobile/assets/</strong></p>
+
+<div class="note">
+  📁 Fichiers à placer dans <code>mobile/assets/</code> :<br/>
+  <strong>icon.png</strong> (1024×1024) · <strong>adaptive-icon.png</strong> (1024×1024) · <strong>splash.png</strong> (1284×2778) · <strong>notification-icon.png</strong> (96×96)
+</div>
+
+<div class="grid" id="previews"></div>
+
+<button class="dl-all" onclick="downloadAll()">⬇️ Télécharger tout</button>
+
+<script>
+const LEAF = `M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12`
+
+function drawIcon(canvas, size, bg = '#0f172a', iconBg = null, iconSize = 0.48, rounded = true) {
+  const ctx = canvas.getContext('2d')
+  canvas.width = size
+  canvas.height = size
+  ctx.clearRect(0, 0, size, size)
+
+  // Background
+  ctx.fillStyle = bg
+  if (rounded) {
+    const r = size * 0.22
+    ctx.beginPath()
+    ctx.moveTo(r, 0); ctx.lineTo(size-r, 0)
+    ctx.quadraticCurveTo(size, 0, size, r)
+    ctx.lineTo(size, size-r)
+    ctx.quadraticCurveTo(size, size, size-r, size)
+    ctx.lineTo(r, size)
+    ctx.quadraticCurveTo(0, size, 0, size-r)
+    ctx.lineTo(0, r)
+    ctx.quadraticCurveTo(0, 0, r, 0)
+    ctx.closePath()
+    ctx.fill()
+  } else {
+    ctx.fillRect(0, 0, size, size)
+  }
+
+  // Inner green rounded box (if iconBg)
+  const boxSize = size * iconSize * 1.45
+  const bx = (size - boxSize) / 2
+  const by = (size - boxSize) / 2
+  if (iconBg) {
+    const grad = ctx.createLinearGradient(bx, by, bx + boxSize, by + boxSize)
+    grad.addColorStop(0, '#22c55e')
+    grad.addColorStop(1, '#16a34a')
+    ctx.fillStyle = grad
+    const br = boxSize * 0.2
+    ctx.beginPath()
+    ctx.moveTo(bx + br, by)
+    ctx.lineTo(bx + boxSize - br, by)
+    ctx.quadraticCurveTo(bx + boxSize, by, bx + boxSize, by + br)
+    ctx.lineTo(bx + boxSize, by + boxSize - br)
+    ctx.quadraticCurveTo(bx + boxSize, by + boxSize, bx + boxSize - br, by + boxSize)
+    ctx.lineTo(bx + br, by + boxSize)
+    ctx.quadraticCurveTo(bx, by + boxSize, bx, by + boxSize - br)
+    ctx.lineTo(bx, by + br)
+    ctx.quadraticCurveTo(bx, by, bx + br, by)
+    ctx.closePath()
+    ctx.fill()
+  }
+
+  // Leaf SVG path
+  const lSize = size * iconSize
+  const lx = (size - lSize) / 2
+  const ly = (size - lSize) / 2
+  const scale = lSize / 24
+
+  ctx.save()
+  ctx.translate(lx, ly)
+  ctx.scale(scale, scale)
+  ctx.strokeStyle = '#ffffff'
+  ctx.lineWidth = 2.2 / scale * (24 / lSize)
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  ctx.fillStyle = 'none'
+
+  // Draw leaf body
+  ctx.beginPath()
+  ctx.moveTo(11, 20)
+  ctx.bezierCurveTo(7.17, 20, 4, 16.83, 4, 13)
+  ctx.bezierCurveTo(4, 8, 9.8, 6.1, 9.8, 6.1)
+  ctx.bezierCurveTo(15.5, 5, 17, 4.48, 19, 2)
+  ctx.bezierCurveTo(20, 4, 21, 6.18, 21, 10)
+  ctx.bezierCurveTo(21, 15.5, 16.22, 20, 11, 20)
+  ctx.closePath()
+  ctx.strokeStyle = '#ffffff'
+  ctx.lineWidth = 2.2
+  ctx.stroke()
+
+  // Draw stem
+  ctx.beginPath()
+  ctx.moveTo(2, 21)
+  ctx.bezierCurveTo(2, 18, 3.85, 15.64, 7.08, 15)
+  ctx.bezierCurveTo(9.5, 14.52, 12, 13, 13, 12)
+  ctx.stroke()
+
+  ctx.restore()
+}
+
+function drawSplash(canvas) {
+  const W = 1284, H = 2778
+  canvas.width = W; canvas.height = H
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle = '#0f172a'
+  ctx.fillRect(0, 0, W, H)
+
+  // Green stripe top
+  const grad = ctx.createLinearGradient(0, 0, W, 0)
+  grad.addColorStop(0, '#22c55e')
+  grad.addColorStop(0.5, '#4ade80')
+  grad.addColorStop(1, '#86efac')
+  ctx.fillStyle = grad
+  ctx.fillRect(0, 0, W, 14)
+
+  // Draw centered icon box
+  const boxSize = 260
+  const bx = (W - boxSize) / 2
+  const by = H / 2 - 200
+
+  const grd = ctx.createLinearGradient(bx, by, bx + boxSize, by + boxSize)
+  grd.addColorStop(0, '#22c55e')
+  grd.addColorStop(1, '#16a34a')
+  ctx.fillStyle = grd
+  const br = 56
+  ctx.beginPath()
+  ctx.moveTo(bx + br, by)
+  ctx.lineTo(bx + boxSize - br, by)
+  ctx.quadraticCurveTo(bx + boxSize, by, bx + boxSize, by + br)
+  ctx.lineTo(bx + boxSize, by + boxSize - br)
+  ctx.quadraticCurveTo(bx + boxSize, by + boxSize, bx + boxSize - br, by + boxSize)
+  ctx.lineTo(bx + br, by + boxSize)
+  ctx.quadraticCurveTo(bx, by + boxSize, bx, by + boxSize - br)
+  ctx.lineTo(bx, by + br)
+  ctx.quadraticCurveTo(bx, by, bx + br, by)
+  ctx.closePath()
+  ctx.fill()
+
+  // Leaf on box
+  const lS = 140
+  const lx = bx + (boxSize - lS) / 2
+  const ly = by + (boxSize - lS) / 2
+  const sc = lS / 24
+  ctx.save()
+  ctx.translate(lx, ly)
+  ctx.scale(sc, sc)
+  ctx.strokeStyle = '#ffffff'
+  ctx.lineWidth = 2.2
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  ctx.beginPath()
+  ctx.moveTo(11, 20)
+  ctx.bezierCurveTo(7.17, 20, 4, 16.83, 4, 13)
+  ctx.bezierCurveTo(4, 8, 9.8, 6.1, 9.8, 6.1)
+  ctx.bezierCurveTo(15.5, 5, 17, 4.48, 19, 2)
+  ctx.bezierCurveTo(20, 4, 21, 6.18, 21, 10)
+  ctx.bezierCurveTo(21, 15.5, 16.22, 20, 11, 20)
+  ctx.closePath()
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.moveTo(2, 21)
+  ctx.bezierCurveTo(2, 18, 3.85, 15.64, 7.08, 15)
+  ctx.bezierCurveTo(9.5, 14.52, 12, 13, 13, 12)
+  ctx.stroke()
+  ctx.restore()
+
+  // App name
+  ctx.fillStyle = '#ffffff'
+  ctx.font = 'bold 96px -apple-system, BlinkMacSystemFont, sans-serif'
+  ctx.textAlign = 'center'
+  ctx.fillText('CarbonTrack', W / 2, by + boxSize + 90)
+
+  // Tagline
+  ctx.fillStyle = '#4ade80'
+  ctx.font = '400 42px -apple-system, BlinkMacSystemFont, sans-serif'
+  ctx.fillText('PLATEFORME CARBONE · WEB & MOBILE', W / 2, by + boxSize + 150)
+}
+
+function drawNotif(canvas) {
+  const S = 96
+  canvas.width = S; canvas.height = S
+  const ctx = canvas.getContext('2d')
+  ctx.clearRect(0, 0, S, S)
+  const lS = 64, lx = 16, ly = 16, sc = lS / 24
+  ctx.save()
+  ctx.translate(lx, ly)
+  ctx.scale(sc, sc)
+  ctx.strokeStyle = '#ffffff'
+  ctx.lineWidth = 2.4
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  ctx.beginPath()
+  ctx.moveTo(11, 20)
+  ctx.bezierCurveTo(7.17, 20, 4, 16.83, 4, 13)
+  ctx.bezierCurveTo(4, 8, 9.8, 6.1, 9.8, 6.1)
+  ctx.bezierCurveTo(15.5, 5, 17, 4.48, 19, 2)
+  ctx.bezierCurveTo(20, 4, 21, 6.18, 21, 10)
+  ctx.bezierCurveTo(21, 15.5, 16.22, 20, 11, 20)
+  ctx.closePath()
+  ctx.stroke()
+  ctx.beginPath()
+  ctx.moveTo(2, 21)
+  ctx.bezierCurveTo(2, 18, 3.85, 15.64, 7.08, 15)
+  ctx.bezierCurveTo(9.5, 14.52, 12, 13, 13, 12)
+  ctx.stroke()
+  ctx.restore()
+}
+
+const sizes = [
+  { id: 'icon', label: 'icon.png', size: 1024, fn: c => drawIcon(c, 1024, '#0f172a', true, 0.38, true) },
+  { id: 'adaptive', label: 'adaptive-icon.png', size: 1024, fn: c => drawIcon(c, 1024, '#0f172a', false, 0.38, false) },
+  { id: 'notif', label: 'notification-icon.png', size: 96, fn: c => drawNotif(c) },
+]
+
+const grid = document.getElementById('previews')
+
+sizes.forEach(s => {
+  const card = document.createElement('div')
+  card.className = 'card'
+  const canvas = document.createElement('canvas')
+  canvas.style.width = s.size > 200 ? '120px' : '48px'
+  canvas.style.height = canvas.style.width
+  canvas.style.borderRadius = s.id === 'adaptive' ? '0' : '12px'
+  s.fn(canvas)
+  const btn = document.createElement('button')
+  btn.textContent = '⬇ ' + s.label
+  btn.onclick = () => download(canvas, s.label)
+  card.appendChild(canvas)
+  const lbl = document.createElement('small')
+  lbl.textContent = s.size + '×' + s.size
+  card.appendChild(lbl)
+  card.appendChild(btn)
+  grid.appendChild(card)
+  canvas._meta = s
+})
+
+// Splash separately (tall)
+;(() => {
+  const card = document.createElement('div')
+  card.className = 'card'
+  const canvas = document.createElement('canvas')
+  canvas.style.width = '52px'
+  canvas.style.height = '113px'
+  canvas.style.borderRadius = '4px'
+  drawSplash(canvas)
+  const btn = document.createElement('button')
+  btn.textContent = '⬇ splash.png'
+  btn.onclick = () => download(canvas, 'splash.png')
+  card.appendChild(canvas)
+  const lbl = document.createElement('small')
+  lbl.textContent = '1284×2778'
+  card.appendChild(lbl)
+  card.appendChild(btn)
+  grid.appendChild(card)
+  canvas._splashMeta = true
+})()
+
+function download(canvas, name) {
+  const a = document.createElement('a')
+  a.download = name
+  a.href = canvas.toDataURL('image/png')
+  a.click()
+}
+
+function downloadAll() {
+  document.querySelectorAll('#previews button').forEach((btn, i) => {
+    setTimeout(() => btn.click(), i * 300)
+  })
+}
+</script>
+</body>
+</html>
