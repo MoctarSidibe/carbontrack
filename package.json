@@ -1,0 +1,46 @@
+{
+  "name": "carbon-footprint-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node --max-old-space-size=4096 node_modules/next/dist/bin/next dev",
+    "build": "node --max-old-space-size=4096 node_modules/next/dist/bin/next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:seed": "node scripts/seed.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookies-next": "^4.1.1",
+    "html2canvas": "^1.4.1",
+    "jose": "^5.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "jspdf": "^4.1.0",
+    "jspdf-autotable": "^5.0.7",
+    "lucide-react": "^0.363.0",
+    "next": "^14.2.0",
+    "pg": "^8.12.0",
+    "qrcode": "^1.5.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "recharts": "^2.12.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/html2canvas": "^0.5.35",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.11.0",
+    "@types/pg": "^8.11.0",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "autoprefixer": "^10.4.0",
+    "docx": "^9.5.1",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "^14.2.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.0",
+    "xlsx": "^0.18.5"
+  }
+}
