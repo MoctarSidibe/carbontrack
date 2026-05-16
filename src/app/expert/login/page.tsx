@@ -1,11 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, UserCheck, AlertCircle } from 'lucide-react'
+import { Eye, EyeOff, UserCheck, AlertCircle, Loader2 } from 'lucide-react'
 
 export default function ExpertLoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -25,16 +23,18 @@ export default function ExpertLoginPage() {
       const data = await res.json()
       if (!res.ok) {
         setError(data.error || 'Email ou mot de passe incorrect.')
+        setLoading(false)
         return
       }
       if (data.role !== 'expert') {
         setError('Ce compte n\'est pas un compte expert certifieur.')
+        setLoading(false)
         return
       }
-      router.push('/expert')
+      // Keep loading=true during navigation — LoadingScreen stays until the new page mounts
+      window.location.href = '/expert'
     } catch {
       setError('Impossible de joindre le serveur.')
-    } finally {
       setLoading(false)
     }
   }
@@ -98,9 +98,12 @@ export default function ExpertLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl text-sm transition-colors"
+              className="w-full mt-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
             >
-              {loading ? 'Connexion...' : 'Accéder à l\'espace expert'}
+              {loading
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> Connexion en cours...</>
+                : "Accéder à l'espace expert"
+              }
             </button>
           </form>
         </div>

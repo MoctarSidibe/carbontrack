@@ -32,7 +32,7 @@ interface TopEmitter {
 }
 
 interface ReportData {
-  assessment: Assessment & { site_name: string; company_name: string; rccm: string; sector: string; site_type: string; site_address: string }
+  assessment: Assessment & { site_name: string; company_name: string; rccm: string; sector: string; site_type: string; site_address: string; logo_url?: string }
   entries: EmissionEntry[]
   summary: { total: number; scope1: number; scope2: number; scope3: number }
   byCategory: Record<string, number>
@@ -156,6 +156,30 @@ export default function ReportsPage() {
       cum += m.total
       return { ...m, cumulative: Math.round(cum) }
     })
+  }, [report])
+
+  // Scope-by-category cross-tab — shows each category broken down by scope
+  const scopeByCategoryData = useMemo(() => {
+    if (!report?.entries) return []
+    const map: Record<string, { scope1: number; scope2: number; scope3: number }> = {}
+    for (const e of report.entries) {
+      const cat = e.category || 'autre'
+      if (!map[cat]) map[cat] = { scope1: 0, scope2: 0, scope3: 0 }
+      const v = parseFloat(String(e.total_co2eq)) || 0
+      if (e.scope === 1) map[cat].scope1 += v
+      else if (e.scope === 2) map[cat].scope2 += v
+      else map[cat].scope3 += v
+    }
+    return Object.entries(map)
+      .map(([cat, d]) => ({
+        name: CATEGORY_FR[cat] || cat,
+        scope1: Math.round(d.scope1),
+        scope2: Math.round(d.scope2),
+        scope3: Math.round(d.scope3),
+        total: d.scope1 + d.scope2 + d.scope3,
+      }))
+      .filter(d => d.total > 0)
+      .sort((a, b) => b.total - a.total)
   }, [report])
 
   const subcategoryData = useMemo(() => {
@@ -305,6 +329,115 @@ export default function ReportsPage() {
     return canvas.toDataURL('image/png')
   }, [])
 
+  // Cumulative monthly trend (line + area fill) — shows progression across the year
+  const drawCumulativeChart = useCallback((months: MonthData[], w: number, h: number): string => {
+    const canvas = document.createElement('canvas')
+    canvas.width = w * 2; canvas.height = h * 2
+    const ctx = canvas.getContext('2d')!
+    ctx.scale(2, 2)
+    const pad = { left: 45, right: 18, top: 12, bottom: 30 }
+    const chartW = w - pad.left - pad.right
+    const chartH = h - pad.top - pad.bottom
+
+    let cum = 0
+    const cumValues = months.map(m => { cum += m.total; return cum })
+    const maxCum = Math.max(...cumValues, 1)
+
+    // Grid + Y axis labels
+    ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 0.5
+    for (let i = 0; i <= 4; i++) {
+      const gy = pad.top + (chartH / 4) * i
+      ctx.beginPath(); ctx.moveTo(pad.left, gy); ctx.lineTo(w - pad.right, gy); ctx.stroke()
+      ctx.fillStyle = '#9ca3af'; ctx.font = '8px sans-serif'; ctx.textAlign = 'right'
+      const gv = maxCum - (maxCum / 4) * i
+      ctx.fillText(gv >= 1000 ? `${(gv / 1000).toFixed(0)}t` : `${Math.round(gv)}`, pad.left - 4, gy + 3)
+    }
+
+    const stepX = chartW / Math.max(1, months.length - 1)
+    const pts = cumValues.map((v, i) => ({
+      x: pad.left + i * stepX,
+      y: pad.top + chartH - (v / maxCum) * chartH,
+    }))
+
+    // Area fill
+    ctx.fillStyle = 'rgba(16, 185, 129, 0.18)'
+    ctx.beginPath()
+    ctx.moveTo(pts[0].x, pad.top + chartH)
+    pts.forEach(p => ctx.lineTo(p.x, p.y))
+    ctx.lineTo(pts[pts.length - 1].x, pad.top + chartH)
+    ctx.closePath(); ctx.fill()
+
+    // Line
+    ctx.strokeStyle = '#10b981'; ctx.lineWidth = 2.2
+    ctx.beginPath()
+    pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y))
+    ctx.stroke()
+
+    // Points
+    pts.forEach(p => {
+      ctx.fillStyle = '#10b981'
+      ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill()
+      ctx.fillStyle = '#ffffff'
+      ctx.beginPath(); ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2); ctx.fill()
+    })
+
+    // X labels
+    ctx.fillStyle = '#6b7280'; ctx.font = '8px sans-serif'; ctx.textAlign = 'center'
+    months.forEach((m, i) => {
+      ctx.fillText(m.label.slice(0, 3), pad.left + i * stepX, h - pad.bottom + 12)
+    })
+
+    // Final value annotation
+    const last = pts[pts.length - 1]
+    const finalVal = cumValues[cumValues.length - 1]
+    ctx.fillStyle = '#065f46'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'right'
+    ctx.fillText(
+      finalVal >= 1000 ? `${(finalVal / 1000).toFixed(1)}t` : `${Math.round(finalVal)}kg`,
+      last.x - 4, last.y - 6,
+    )
+    return canvas.toDataURL('image/png')
+  }, [])
+
+  // Horizontal bars with long labels — used for top emitters, GHG, ISO
+  const drawHorizontalBars = useCallback(
+    (items: { label: string; value: number; color: string }[], w: number, h: number, labelMaxLen = 30): string => {
+      const dpr = 2
+      const canvas = document.createElement('canvas')
+      canvas.width = w * dpr; canvas.height = h * dpr
+      const ctx = canvas.getContext('2d')!
+      ctx.scale(dpr, dpr)
+      const maxVal = Math.max(...items.map(i => i.value), 1)
+      const labelW = Math.min(220, w * 0.42)
+      const valueW = w * 0.16
+      const barMaxW = w - labelW - valueW - 10
+      const gap = 4
+      const itemH = Math.min(20, Math.max(11, (h - 8) / items.length - gap))
+      const totalH = items.length * (itemH + gap) - gap
+      const startY = Math.max(4, (h - totalH) / 2)
+      items.forEach((item, i) => {
+        const by = startY + i * (itemH + gap)
+        const bw = Math.max(3, (item.value / maxVal) * barMaxW)
+        // Label
+        ctx.fillStyle = '#374151'; ctx.font = '10px Inter,sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle'
+        const lbl = item.label.length > labelMaxLen ? item.label.slice(0, labelMaxLen - 2) + '..' : item.label
+        ctx.fillText(lbl, labelW - 6, by + itemH / 2)
+        // Bar bg
+        ctx.fillStyle = '#f3f4f6'; ctx.fillRect(labelW, by, barMaxW, itemH)
+        // Bar
+        ctx.fillStyle = item.color; ctx.beginPath()
+        ctx.roundRect(labelW, by, bw, itemH, [0, 3, 3, 0]); ctx.fill()
+        // Value
+        ctx.fillStyle = '#4b5563'; ctx.font = '9px Inter,sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'
+        const valStr = item.value >= 1000000 ? `${(item.value / 1000000).toFixed(2)}kt`
+          : item.value >= 1000 ? `${(item.value / 1000).toFixed(1)}t`
+          : `${Math.round(item.value)}kg`
+        ctx.fillText(valStr, labelW + bw + 5, by + itemH / 2)
+      })
+      return canvas.toDataURL('image/png')
+    },
+    [],
+  )
+
   // ===== PDF GENERATION =====
   const generatePDF = useCallback(async (mode: 'yearly' | 'monthly') => {
     if (!report) return
@@ -340,18 +473,50 @@ export default function ReportsPage() {
       }
       const tblY = () => (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY
 
+      let logoData: string | null = null
+      let logoProps: { w: number, h: number } | null = null
+      if (report.assessment.logo_url) {
+        try {
+          const res = await fetch(report.assessment.logo_url)
+          if (res.ok) {
+            const blob = await res.blob()
+            const base64 = await new Promise<string>((resolve) => {
+              const reader = new FileReader()
+              reader.onloadend = () => resolve(reader.result as string)
+              reader.readAsDataURL(blob)
+            })
+            logoData = base64
+            logoProps = await new Promise<{ w: number, h: number }>((resolve) => {
+              const img = new Image()
+              img.onload = () => resolve({ w: img.width || 1, h: img.height || 1 })
+              img.onerror = () => resolve({ w: 1, h: 1 })
+              img.src = base64
+            })
+          }
+        } catch (e) { console.warn('Logo pre-fetch failed:', e) }
+      }
+
       const pageNum = { v: 1 }
       const addHeader = () => {
         doc.setFillColor(...brand); doc.rect(0, 0, pw, 2.5, 'F')
+        let headX = margin;
+        if (logoData && logoProps) {
+          try {
+            const targetH = 14;
+            const targetW = (logoProps.w / logoProps.h) * targetH;
+            doc.addImage(logoData, margin, 4, targetW, targetH, undefined, 'FAST')
+            headX = margin + targetW + 4;
+          } catch(e) {}
+        }
         doc.setFontSize(7); doc.setTextColor(...mid)
-        doc.text(`${report.assessment.company_name} | ${report.assessment.name} | ${report.assessment.year}`, margin, 9)
+        doc.text(`${report.assessment.company_name} | ${report.assessment.site_name}, ${'country' in report.assessment ? (report.assessment as any).country : 'Global'} | ${report.assessment.year}`, headX, 9)
         doc.text(`RCCM: ${report.assessment.rccm || 'N/A'}`, pw - margin, 9, { align: 'right' })
-        doc.setDrawColor(229, 231, 235); doc.line(margin, 12, pw - margin, 12)
+        doc.setDrawColor(229, 231, 235); doc.line(margin, 16, pw - margin, 16)
       }
       const addFooter = (p: number) => {
         doc.setDrawColor(229, 231, 235); doc.line(margin, ph - 12, pw - margin, ph - 12)
         doc.setFontSize(6.5); doc.setTextColor(...light)
-        doc.text('CarbonTrack - Bilan Carbone', margin, ph - 7)
+        doc.text('GreenLeaves - Bilan Carbone', margin, ph - 7)
         doc.text(`${new Date().toLocaleDateString('fr-FR')}`, pw / 2, ph - 7, { align: 'center' })
         doc.text(`Page ${p}`, pw - margin, ph - 7, { align: 'right' })
       }
@@ -361,7 +526,7 @@ export default function ReportsPage() {
         doc.setFillColor(209, 250, 229); doc.rect(margin + 35, y + 7, 15, 1, 'F')
         y += 13
       }
-      const newPage = () => { addFooter(pageNum.v); doc.addPage(); pageNum.v++; addHeader(); y = 18 }
+      const newPage = () => { addFooter(pageNum.v); doc.addPage(); pageNum.v++; addHeader(); y = 20 }
       const check = (n: number) => { if (y + n > ph - 18) newPage() }
 
       // =============================================
@@ -379,37 +544,49 @@ export default function ReportsPage() {
         doc.rect(0, (ph / 50) * gi, pw, ph / 50 + 0.5, 'F')
       }
 
-      // Logo icon via canvas (green rounded square + white leaf)
+      // Logo icon
       try {
-        const logoC = document.createElement('canvas')
-        logoC.width = 240; logoC.height = 240
-        const logoCtx = logoC.getContext('2d')!
-        const lPad = 20, lSz = 200, lRad = 44
-        logoCtx.shadowColor = 'rgba(0,0,0,0.3)'; logoCtx.shadowBlur = 20; logoCtx.shadowOffsetY = 8
-        logoCtx.beginPath()
-        logoCtx.moveTo(lPad + lRad, lPad)
-        logoCtx.lineTo(lPad + lSz - lRad, lPad); logoCtx.quadraticCurveTo(lPad + lSz, lPad, lPad + lSz, lPad + lRad)
-        logoCtx.lineTo(lPad + lSz, lPad + lSz - lRad); logoCtx.quadraticCurveTo(lPad + lSz, lPad + lSz, lPad + lSz - lRad, lPad + lSz)
-        logoCtx.lineTo(lPad + lRad, lPad + lSz); logoCtx.quadraticCurveTo(lPad, lPad + lSz, lPad, lPad + lSz - lRad)
-        logoCtx.lineTo(lPad, lPad + lRad); logoCtx.quadraticCurveTo(lPad, lPad, lPad + lRad, lPad)
-        logoCtx.closePath()
-        logoCtx.fillStyle = '#16a34a'; logoCtx.fill()
-        logoCtx.shadowColor = 'transparent'
-        // White leaf SVG paths (Lucide Leaf icon)
-        const leafSc = lSz / 24 * 0.5, leafOx = lPad + lSz * 0.25, leafOy = lPad + lSz * 0.2
-        logoCtx.save(); logoCtx.translate(leafOx, leafOy); logoCtx.scale(leafSc, leafSc)
-        logoCtx.strokeStyle = 'white'; logoCtx.lineWidth = 2.8; logoCtx.lineCap = 'round'; logoCtx.lineJoin = 'round'
-        try {
-          logoCtx.stroke(new Path2D('M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 17 3.5 17 3.5s1.5 2.5 1.5 6c0 4-2.5 7-7.5 10.5'))
-          logoCtx.stroke(new Path2D('M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12'))
-        } catch { /* Path2D SVG fallback */ }
-        logoCtx.restore()
-        doc.addImage(logoC.toDataURL('image/png'), 'PNG', (pw - 30) / 2, 55, 30, 30)
+        if (logoData && logoProps) {
+          const ratio = logoProps.w / logoProps.h;
+          let targetH = 50;
+          let targetW = 50;
+          if (ratio > 1) { // Wide
+            targetH = targetW / ratio;
+          } else { // Tall
+            targetW = targetH * ratio;
+          }
+          doc.addImage(logoData, (pw - targetW) / 2, 55, targetW, targetH, undefined, 'FAST')
+        } else {
+          // Default leaf logo
+          const logoC = document.createElement('canvas')
+          logoC.width = 240; logoC.height = 240
+          const logoCtx = logoC.getContext('2d')!
+          const lPad = 20, lSz = 200, lRad = 44
+          logoCtx.shadowColor = 'rgba(0,0,0,0.3)'; logoCtx.shadowBlur = 20; logoCtx.shadowOffsetY = 8
+          logoCtx.beginPath()
+          logoCtx.moveTo(lPad + lRad, lPad)
+          logoCtx.lineTo(lPad + lSz - lRad, lPad); logoCtx.quadraticCurveTo(lPad + lSz, lPad, lPad + lSz, lPad + lRad)
+          logoCtx.lineTo(lPad + lSz, lPad + lSz - lRad); logoCtx.quadraticCurveTo(lPad + lSz, lPad + lSz, lPad + lSz - lRad, lPad + lSz)
+          logoCtx.lineTo(lPad + lRad, lPad + lSz); logoCtx.quadraticCurveTo(lPad, lPad + lSz, lPad, lPad + lSz - lRad)
+          logoCtx.lineTo(lPad, lPad + lRad); logoCtx.quadraticCurveTo(lPad, lPad, lPad + lRad, lPad)
+          logoCtx.closePath()
+          logoCtx.fillStyle = '#16a34a'; logoCtx.fill()
+          logoCtx.shadowColor = 'transparent'
+          const leafSc = lSz / 24 * 0.5, leafOx = lPad + lSz * 0.25, leafOy = lPad + lSz * 0.2
+          logoCtx.save(); logoCtx.translate(leafOx, leafOy); logoCtx.scale(leafSc, leafSc)
+          logoCtx.strokeStyle = 'white'; logoCtx.lineWidth = 2.8; logoCtx.lineCap = 'round'; logoCtx.lineJoin = 'round'
+          try {
+            logoCtx.stroke(new Path2D('M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 17 3.5 17 3.5s1.5 2.5 1.5 6c0 4-2.5 7-7.5 10.5'))
+            logoCtx.stroke(new Path2D('M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12'))
+          } catch { /* SVG Path2D fallback */ }
+          logoCtx.restore()
+          doc.addImage(logoC.toDataURL('image/png'), 'PNG', (pw - 30) / 2, 55, 30, 30)
+        }
       } catch { /* logo skip */ }
 
       // Title
       doc.setFontSize(36); doc.setTextColor(255, 255, 255)
-      doc.text('CarbonTrack', pw / 2, 102, { align: 'center' })
+      doc.text('GreenLeaves', pw / 2, 102, { align: 'center' })
 
       // Subtitle
       doc.setFontSize(12); doc.setTextColor(220, 252, 231)
@@ -417,7 +594,7 @@ export default function ReportsPage() {
 
       // Company + site + year
       doc.setFontSize(10); doc.setTextColor(187, 247, 208)
-      doc.text(`${report.assessment.company_name} | ${report.assessment.site_name} | Annee ${report.assessment.year}`, pw / 2, 126, { align: 'center' })
+      doc.text(`${report.assessment.company_name} | ${report.assessment.site_name}, ${'country' in report.assessment ? (report.assessment as any).country : 'Global'} | Annee ${report.assessment.year}`, pw / 2, 126, { align: 'center' })
 
       // ISO/GHG badges (white bordered pill shapes)
       const coverBadges = ['ISO 14064-1:2018', 'ISO 14069:2013', 'GHG Protocol']
@@ -441,7 +618,7 @@ export default function ReportsPage() {
 
       // Cover footer
       doc.setFontSize(7); doc.setTextColor(187, 247, 208)
-      doc.text('GreenLeaves | Document confidentiel | ' + new Date().toLocaleDateString('fr-FR'), pw / 2, ph - 18, { align: 'center' })
+      doc.text((report.assessment.company_name || 'GreenLeaves') + ' | Document confidentiel | ' + new Date().toLocaleDateString('fr-FR'), pw / 2, ph - 18, { align: 'center' })
 
       // =============================================
       // PAGE 2: DATA SUMMARY
@@ -451,7 +628,7 @@ export default function ReportsPage() {
       doc.setFillColor(...brandDark); doc.rect(0, 0, 4, ph, 'F')
 
       // Section title
-      y = 18
+      y = 22
       doc.setFontSize(12); doc.setTextColor(...dark); doc.text('Synthese du Bilan Carbone', margin, y + 4)
       doc.setFillColor(...brand); doc.rect(margin, y + 7, 35, 1, 'F')
       doc.setFillColor(209, 250, 229); doc.rect(margin + 35, y + 7, 15, 1, 'F')
@@ -538,6 +715,18 @@ export default function ReportsPage() {
         const monthImg = drawMonthlyChart(report.byMonth, 600, 160)
         doc.addImage(monthImg, 'PNG', margin + 2, y + 11, cw - 4, 36)
         y += 55
+
+        // Cumulative trend over the year — canvas aspect matches PDF placement
+        check(55)
+        doc.setFillColor(...bg); doc.roundedRect(margin, y, cw, 50, 2, 2, 'F')
+        doc.setFontSize(8); doc.setTextColor(...dark); doc.text("Cumul des emissions sur l'annee", margin + 4, y + 8)
+        const cumW = 600
+        const cumPdfW = cw - 4
+        const cumPdfH = 36
+        const cumCanvasH = Math.round(cumW * (cumPdfH / cumPdfW))
+        const cumImg = drawCumulativeChart(report.byMonth, cumW, cumCanvasH)
+        doc.addImage(cumImg, 'PNG', margin + 2, y + 11, cumPdfW, cumPdfH)
+        y += 55
       }
 
       addFooter(pageNum.v)
@@ -563,6 +752,20 @@ export default function ReportsPage() {
       section('GHG Protocol - Categories')
       const ghgEntries = Object.entries(report.byGhgCategory).filter(([, v]) => v.total > 0).sort(([a], [b]) => a.localeCompare(b))
       if (ghgEntries.length > 0) {
+        // Visual: horizontal bar chart with scope colors
+        const ghgBarItems = ghgEntries.map(([k, v]) => ({
+          label: k,
+          value: v.total,
+          color: k.startsWith('1-') ? '#ef4444' : k.startsWith('2-') ? '#f97316' : '#3b82f6',
+        }))
+        const ghgChartH = Math.max(45, Math.min(90, ghgBarItems.length * 7 + 8))
+        check(ghgChartH + 10)
+        // Canvas aspect matches PDF placement aspect to avoid vertical squish & overlap
+        const ghgCanvasH = Math.round(800 * (ghgChartH / cw))
+        const ghgImg = drawHorizontalBars(ghgBarItems, 800, ghgCanvasH, 38)
+        doc.addImage(ghgImg, 'PNG', margin, y, cw, ghgChartH)
+        y += ghgChartH + 4
+
         autoTable(doc, { ...tbl, startY: y,
           head: [['Categorie GHG', 'Scope', 'Emissions (kgCO2eq)', '% du total']],
           body: ghgEntries.map(([k, v]) => [k, k.startsWith('1-') ? 'Scope 1' : k.startsWith('2-') ? 'Scope 2' : 'Scope 3', formatCO2(v.total), report.summary.total > 0 ? ((v.total / report.summary.total) * 100).toFixed(1) + '%' : '0%']),
@@ -575,6 +778,19 @@ export default function ReportsPage() {
       check(35)
       section('ISO 14064-1 / ISO 14069')
       if (isoData.length > 0) {
+        // Visual: horizontal bar chart with scope colors
+        const isoBarItems = isoData.map(d => ({
+          label: d.name,
+          value: d.total,
+          color: d.scope === 1 ? '#ef4444' : d.scope === 2 ? '#f97316' : '#3b82f6',
+        }))
+        const isoChartH = Math.max(45, Math.min(90, isoBarItems.length * 7 + 8))
+        check(isoChartH + 10)
+        const isoCanvasH = Math.round(800 * (isoChartH / cw))
+        const isoImg = drawHorizontalBars(isoBarItems, 800, isoCanvasH, 36)
+        doc.addImage(isoImg, 'PNG', margin, y, cw, isoChartH)
+        y += isoChartH + 4
+
         autoTable(doc, { ...tbl, startY: y,
           head: [['Poste ISO 14069', 'Scope', 'Postes', 'Emissions (kgCO2eq)', '%']],
           body: isoData.map(d => [d.name, `Scope ${d.scope}`, String(d.count), formatCO2(d.total), report.summary.total > 0 ? ((d.total / report.summary.total) * 100).toFixed(1) + '%' : '0%']),
@@ -601,6 +817,19 @@ export default function ReportsPage() {
       if (report.topEmitters && report.topEmitters.length > 0) {
         check(35)
         section('Top Sources d\'Emissions')
+        // Visual: horizontal bar chart, scope-colored
+        const topItems = report.topEmitters.slice(0, 10).map(e => ({
+          label: e.name,
+          value: e.total,
+          color: e.scope === 1 ? '#ef4444' : e.scope === 2 ? '#f97316' : '#3b82f6',
+        }))
+        const topChartH = Math.max(55, Math.min(100, topItems.length * 7 + 10))
+        check(topChartH + 10)
+        const topCanvasH = Math.round(800 * (topChartH / cw))
+        const topImg = drawHorizontalBars(topItems, 800, topCanvasH, 40)
+        doc.addImage(topImg, 'PNG', margin, y, cw, topChartH)
+        y += topChartH + 4
+
         autoTable(doc, { ...tbl, startY: y,
           head: [['#', 'Source', 'Categorie', 'Scope', 'Quantite', 'Unite', 'Emissions (kgCO2eq)']],
           body: report.topEmitters.slice(0, 10).map((e, i) => [String(i + 1), e.name.length > 35 ? e.name.slice(0, 32) + '...' : e.name, CATEGORY_FR[e.category] || e.category, `Scope ${e.scope}`, fmtNum(Number(e.quantity)), e.unit?.replace('kgCO2eq/', '') || '', formatCO2(e.total)]),
@@ -672,7 +901,7 @@ export default function ReportsPage() {
 
       // Disclaimer
       doc.setFontSize(6); doc.setTextColor(...light)
-      doc.text('Ce rapport est genere automatiquement par CarbonTrack. Les resultats dependent des donnees saisies. Document a titre informatif.', margin, y + 3)
+      doc.text('Ce rapport est genere automatiquement par GreenLeaves. Les resultats dependent des donnees saisies. Document a titre informatif.', margin, y + 3)
 
       addFooter(pageNum.v)
 
@@ -686,7 +915,7 @@ export default function ReportsPage() {
       setPdfGenerating(false)
       setPdfModal(false)
     }
-  }, [report, selectedId, isoData, drawPieChart, drawBarChart, drawMonthlyChart])
+  }, [report, selectedId, isoData, drawPieChart, drawBarChart, drawMonthlyChart, drawCumulativeChart, drawHorizontalBars])
 
   return (
     <div className="max-w-[1400px] mx-auto">
@@ -935,6 +1164,49 @@ export default function ReportsPage() {
                         ))}
                       </Bar>
                     </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {/* Scope x Category — stacked horizontal bar */}
+              {scopeByCategoryData.length > 0 && (
+                <div className="card p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Composition par scope et categorie</h3>
+                  <p className="text-sm text-gray-500 mb-6">Decomposition de chaque categorie selon les trois scopes du GHG Protocol</p>
+                  <ResponsiveContainer width="100%" height={Math.max(260, scopeByCategoryData.length * 48)}>
+                    <BarChart data={scopeByCategoryData} layout="vertical" margin={{ left: 10 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" tickFormatter={smartAxisFormat} scale="auto" />
+                      <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 11 }} />
+                      <Tooltip formatter={(value: number) => formatCO2(value)} />
+                      <Legend />
+                      <Bar dataKey="scope1" stackId="cat" name="Scope 1" fill="#ef4444" />
+                      <Bar dataKey="scope2" stackId="cat" name="Scope 2" fill="#f97316" />
+                      <Bar dataKey="scope3" stackId="cat" name="Scope 3" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {/* Cumulative trend in overview when monthly data available */}
+              {cumulativeData.length > 0 && cumulativeData.some(c => c.cumulative > 0) && (
+                <div className="card p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Cumul des emissions sur l&apos;annee</h3>
+                  <p className="text-sm text-gray-500 mb-6">Progression cumulee des emissions mois apres mois</p>
+                  <ResponsiveContainer width="100%" height={260}>
+                    <AreaChart data={cumulativeData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="cumGradOverview" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+                      <YAxis tickFormatter={smartAxisFormat} />
+                      <Tooltip formatter={(value: number) => formatCO2(value)} />
+                      <Area type="monotone" dataKey="cumulative" name="Cumul" stroke="#10b981" strokeWidth={2.5} fill="url(#cumGradOverview)" />
+                    </AreaChart>
                   </ResponsiveContainer>
                 </div>
               )}

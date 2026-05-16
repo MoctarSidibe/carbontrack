@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { query } from '@/lib/db'
+
+export const dynamic = 'force-dynamic'
 
 async function requireAdmin(session: Awaited<ReturnType<typeof getSession>>) {
   if (!session) return false
@@ -10,9 +12,9 @@ async function requireAdmin(session: Awaited<ReturnType<typeof getSession>>) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSession()
+    const session = await getSession('admin')
     if (!await requireAdmin(session)) {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+      return NextResponse.json({ error: 'AccÃ¨s refusÃ©' }, { status: 403 })
     }
 
     const { searchParams } = new URL(request.url)

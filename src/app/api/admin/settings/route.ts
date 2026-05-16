@@ -1,34 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { query } from '@/lib/db'
 
-async function ensureTable() {
-  await query(`
-    CREATE TABLE IF NOT EXISTS platform_settings (
-      key   VARCHAR(100) PRIMARY KEY,
-      value TEXT NOT NULL,
-      label VARCHAR(255),
-      updated_at TIMESTAMP DEFAULT NOW()
-    )
-  `, [])
-
-  // Seed defaults if empty
-  await query(`
-    INSERT INTO platform_settings (key, value, label) VALUES
-      ('monthly_price',             '250000',  'Prix mensuel (FCFA)'),
-      ('currency',                  'FCFA',    'Devise'),
-      ('subscription_duration_days','30',      'Durée abonnement (jours)')
-    ON CONFLICT (key) DO NOTHING
-  `, [])
-}
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    const session = await getSession()
+    const session = await getSession('admin')
     if (!session || session.role !== 'admin') {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+      return NextResponse.json({ error: 'AccÃ¨s refusÃ©' }, { status: 403 })
     }
-    await ensureTable()
     const result = await query(`SELECT key, value, label, updated_at FROM platform_settings ORDER BY key`, [])
     const settings: Record<string, { value: string; label: string; updatedAt: string }> = {}
     for (const r of result.rows) {
@@ -43,20 +24,23 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await getSession()
+    const session = await getSession('admin')
     if (!session || session.role !== 'admin') {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+      return NextResponse.json({ error: 'AccÃ¨s refusÃ©' }, { status: 403 })
     }
-    await ensureTable()
-
     const body = await request.json()
-    const updates = body as Record<string, string>
+    const updates = Object.entries(body as Record<string, string>)
+      .filter(([, v]) => typeof v === 'string' || typeof v === 'number')
 
-    for (const [key, value] of Object.entries(updates)) {
-      if (typeof value !== 'string' && typeof value !== 'number') continue
+    if (updates.length > 0) {
+      // Single query with unnest â€” avoids N round-trips
+      const keys   = updates.map(([k]) => k)
+      const values = updates.map(([, v]) => String(v))
       await query(
-        `UPDATE platform_settings SET value = $1, updated_at = NOW() WHERE key = $2`,
-        [String(value), key]
+        `UPDATE platform_settings SET value = u.value, updated_at = NOW()
+         FROM (SELECT unnest($1::text[]) AS key, unnest($2::text[]) AS value) AS u
+         WHERE platform_settings.key = u.key`,
+        [keys, values]
       )
     }
 

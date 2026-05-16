@@ -14,8 +14,8 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return bcrypt.compare(password, hash)
 }
 
-export async function createToken(payload: { userId: number; email: string; companyId: number; role: string }): Promise<string> {
-  return new SignJWT(payload)
+export async function createToken(payload: { userId: number; email: string; companyId: number | null; role: string; partnerId?: number | null }): Promise<string> {
+  return new SignJWT(payload as Record<string, unknown>)
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('7d')
     .setIssuedAt()
@@ -25,15 +25,24 @@ export async function createToken(payload: { userId: number; email: string; comp
 export async function verifyToken(token: string) {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET)
-    return payload as { userId: number; email: string; companyId: number; role: string }
+    return payload as { userId: number; email: string; companyId: number | null; role: string; partnerId?: number | null }
   } catch {
     return null
   }
 }
 
-export async function getSession() {
+// Each portal gets its own cookie so sessions never collide
+export const PORTAL_COOKIE = {
+  admin:  'adm_token',
+  expert: 'exp_token',
+  user:   'token',
+} as const
+
+type Portal = keyof typeof PORTAL_COOKIE
+
+export async function getSession(portal: Portal = 'user') {
   const cookieStore = cookies()
-  const token = cookieStore.get('token')?.value
+  const token = cookieStore.get(PORTAL_COOKIE[portal])?.value
   if (!token) return null
   return verifyToken(token)
 }

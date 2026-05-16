@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { getSession, hashPassword } from '@/lib/auth'
 import { query } from '@/lib/db'
+
+export const dynamic = 'force-dynamic'
 
 async function requireAdmin(session: Awaited<ReturnType<typeof getSession>>) {
   if (!session) return false
@@ -10,8 +12,8 @@ async function requireAdmin(session: Awaited<ReturnType<typeof getSession>>) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSession()
-    if (!await requireAdmin(session)) return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+    const session = await getSession('admin')
+    if (!await requireAdmin(session)) return NextResponse.json({ error: 'AccÃ¨s refusÃ©' }, { status: 403 })
 
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search') || ''
@@ -74,23 +76,23 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession()
-    if (!await requireAdmin(session)) return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+    const session = await getSession('admin')
+    if (!await requireAdmin(session)) return NextResponse.json({ error: 'AccÃ¨s refusÃ©' }, { status: 403 })
 
     const { firstName, lastName, email, password, phone, companyId, role } = await request.json()
 
     if (!firstName || !lastName || !email || !password || !companyId) {
-      return NextResponse.json({ error: 'Tous les champs obligatoires doivent être remplis' }, { status: 400 })
+      return NextResponse.json({ error: 'Tous les champs obligatoires doivent Ãªtre remplis' }, { status: 400 })
     }
 
     if (!['user', 'admin'].includes(role)) {
-      return NextResponse.json({ error: 'Rôle invalide' }, { status: 400 })
+      return NextResponse.json({ error: 'RÃ´le invalide' }, { status: 400 })
     }
 
     // Check email uniqueness
     const existing = await query('SELECT id FROM users WHERE email = $1', [email])
     if (existing.rows.length > 0) {
-      return NextResponse.json({ error: 'Un compte avec cet email existe déjà' }, { status: 409 })
+      return NextResponse.json({ error: 'Un compte avec cet email existe dÃ©jÃ ' }, { status: 409 })
     }
 
     // Verify company exists

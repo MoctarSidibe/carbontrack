@@ -1,12 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Leaf, Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react'
+import { Leaf, Mail, Lock, ArrowRight, AlertCircle, Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -26,21 +24,18 @@ export default function LoginPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.error || 'Erreur de connexion')
+        setError(data.error || 'Email ou mot de passe incorrect')
+        setLoading(false)
         return
       }
 
-      // Route to the correct portal based on role
-      if (data.role === 'admin') {
-        router.push('/admin')
-      } else if (data.role === 'expert') {
-        router.push('/expert')
-      } else {
-        router.push('/dashboard')
-      }
+      // Hard redirect — forces a full page load with the new cookie set
+      if (data.role === 'admin')        window.location.href = '/admin'
+      else if (data.role === 'expert')  window.location.href = '/expert'
+      else if (data.role === 'partner') window.location.href = '/partner'
+      else                              window.location.href = '/dashboard'
     } catch {
-      setError('Erreur de connexion au serveur')
-    } finally {
+      setError('Impossible de joindre le serveur. Vérifiez votre connexion.')
       setLoading(false)
     }
   }
@@ -56,12 +51,12 @@ export default function LoginPage() {
             <span className="text-xl font-bold text-gray-900">CarbonTrack</span>
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">Connexion</h1>
-          <p className="text-gray-500 mt-2">Acc&eacute;dez &agrave; votre tableau de bord</p>
+          <p className="text-gray-500 mt-2">Accédez à votre tableau de bord</p>
         </div>
 
         <div className="card p-8">
           {error && (
-            <div className="flex items-center gap-2 bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-6 text-sm">
+            <div className="flex items-center gap-2 bg-red-50 text-red-700 border border-red-200 px-4 py-3 rounded-xl mb-6 text-sm">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               {error}
             </div>
@@ -75,10 +70,11 @@ export default function LoginPage() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   className="input-field pl-11"
                   placeholder="votre@email.com"
                   required
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -90,10 +86,11 @@ export default function LoginPage() {
                 <input
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={e => setPassword(e.target.value)}
                   className="input-field pl-11"
                   placeholder="Votre mot de passe"
                   required
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -101,10 +98,12 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50"
+              className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {loading ? 'Connexion...' : 'Se connecter'}
-              {!loading && <ArrowRight className="w-4 h-4" />}
+              {loading
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> Connexion en cours...</>
+                : <><span>Se connecter</span><ArrowRight className="w-4 h-4" /></>
+              }
             </button>
           </form>
         </div>
@@ -112,7 +111,7 @@ export default function LoginPage() {
         <p className="text-center text-sm text-gray-500 mt-6">
           Pas encore de compte ?{' '}
           <Link href="/register" className="text-brand-600 hover:text-brand-700 font-medium">
-            Cr&eacute;er un compte
+            Créer un compte
           </Link>
         </p>
       </div>

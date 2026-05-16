@@ -1,6 +1,8 @@
-import { NextResponse } from 'next/server'
+﻿import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { query } from '@/lib/db'
+
+export const dynamic = 'force-dynamic'
 
 async function requireAdmin(session: Awaited<ReturnType<typeof getSession>>) {
   if (!session) return false
@@ -10,8 +12,8 @@ async function requireAdmin(session: Awaited<ReturnType<typeof getSession>>) {
 
 export async function GET() {
   try {
-    const session = await getSession()
-    if (!await requireAdmin(session)) return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+    const session = await getSession('admin')
+    if (!await requireAdmin(session)) return NextResponse.json({ error: 'AccÃ¨s refusÃ©' }, { status: 403 })
 
     const result = await query(`
       SELECT cr.*,
@@ -26,45 +28,56 @@ export async function GET() {
       ORDER BY cr.requested_at DESC
     `)
 
-    const certifications = await Promise.all(
-      result.rows.map(async (cert) => {
-        const docs = await query(
-          `SELECT id, doc_type, original_name, file_size, mime_type, created_at
-           FROM certification_documents WHERE certification_id = $1 ORDER BY created_at DESC`,
-          [cert.id]
-        )
-        return {
-          id: cert.id,
-          assessmentId: cert.assessment_id,
-          assessmentName: cert.assessment_name,
-          assessmentYear: cert.assessment_year,
-          siteName: cert.site_name,
-          totalCo2eq: parseFloat(cert.total_co2eq || 0),
-          scope1: parseFloat(cert.scope1_co2eq || 0),
-          scope2: parseFloat(cert.scope2_co2eq || 0),
-          scope3: parseFloat(cert.scope3_co2eq || 0),
-          status: cert.status,
-          expertName: cert.expert_name,
-          expertEmail: cert.expert_email,
-          inspectionDate: cert.inspection_date,
-          inspectionNotes: cert.inspection_notes,
-          companyMessage: cert.company_message,
-          adminNotes: cert.admin_notes,
-          rejectionReason: cert.rejection_reason,
-          certifiedAt: cert.certified_at,
-          certificateNumber: cert.certificate_number,
-          requestedAt: cert.requested_at,
-          company: { id: cert.company_id, name: cert.company_name },
-          documents: docs.rows.map(d => ({
-            id: d.id,
-            docType: d.doc_type,
-            originalName: d.original_name,
-            fileSize: d.file_size,
-            createdAt: d.created_at,
-          })),
-        }
-      })
-    )
+    // Batch-fetch all documents in one query then group in memory
+    const certIds = result.rows.map((r: { id: number }) => r.id)
+    let docsMap: Record<number, Record<string, unknown>[]> = {}
+    if (certIds.length > 0) {
+      const docsResult = await query(
+        `SELECT id, certification_id, doc_type, original_name, file_size, mime_type, created_at
+         FROM certification_documents
+         WHERE certification_id = ANY($1::int[])
+         ORDER BY created_at DESC`,
+        [certIds]
+      )
+      for (const d of docsResult.rows) {
+        if (!docsMap[d.certification_id]) docsMap[d.certification_id] = []
+        docsMap[d.certification_id].push(d)
+      }
+    }
+
+    const certifications = result.rows.map((cert) => {
+      const certDocs = docsMap[cert.id] ?? []
+      return {
+        id: cert.id,
+        assessmentId: cert.assessment_id,
+        assessmentName: cert.assessment_name,
+        assessmentYear: cert.assessment_year,
+        siteName: cert.site_name,
+        totalCo2eq: parseFloat(cert.total_co2eq || 0),
+        scope1: parseFloat(cert.scope1_co2eq || 0),
+        scope2: parseFloat(cert.scope2_co2eq || 0),
+        scope3: parseFloat(cert.scope3_co2eq || 0),
+        status: cert.status,
+        expertName: cert.expert_name,
+        expertEmail: cert.expert_email,
+        inspectionDate: cert.inspection_date,
+        inspectionNotes: cert.inspection_notes,
+        companyMessage: cert.company_message,
+        adminNotes: cert.admin_notes,
+        rejectionReason: cert.rejection_reason,
+        certifiedAt: cert.certified_at,
+        certificateNumber: cert.certificate_number,
+        requestedAt: cert.requested_at,
+        company: { id: cert.company_id, name: cert.company_name },
+        documents: certDocs.map(d => ({
+          id: d.id,
+          docType: d.doc_type,
+          originalName: d.original_name,
+          fileSize: d.file_size,
+          createdAt: d.created_at,
+        })),
+      }
+    })
 
     return NextResponse.json(certifications)
   } catch (error) {

@@ -6,8 +6,10 @@ import {
   CheckCircle, XCircle, FileText, Building2, Calendar,
   AlertCircle, ChevronDown, ChevronUp, Award, TrendingUp, BarChart3,
   Layers, ListChecks, ShieldCheck, AlertTriangle, Info,
-  User, Clock, X, Save
+  User, Clock, X, Download, FileCheck,
 } from 'lucide-react'
+import InspectionCard from '@/components/InspectionCard'
+import CertEmissionCharts from '@/components/CertEmissionCharts'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -20,12 +22,35 @@ interface Entry {
 interface MonthRow { month: number; label: string; total: number; scope1: number; scope2: number; scope3: number }
 interface CatRow   { category: string; total: number; scope: number; count: number }
 interface TopRow   { name: string; total: number; scope: number; category: string; quantity: number; unit: string; factorValue: number }
-interface DocRow   { id: number; docType: string; originalName: string; fileSize: number; createdAt: string }
+interface DocRow      { id: number; docType: string; originalName: string; fileSize: number; createdAt: string }
+interface AuditDocRow { id: number; factorId: string | null; factorName: string | null; category: string | null; scope: number | null; originalName: string; fileSize: number; mimeType: string; createdAt: string }
+
+interface AuditChecklistData {
+  eligibility:    Record<string, boolean | string>
+  data_quality:   Record<string, boolean | string>
+  calculations:   Record<string, boolean | string>
+  site_visit:     Record<string, boolean | string>
+  ogec_compliance:Record<string, boolean | string>
+  opinion: {
+    overall_opinion: string
+    certification_recommended: boolean
+    reservations: string[]
+    major_findings: string
+    recommendations: string
+  }
+}
 
 interface CertDetail {
   id: number; status: string; requestedAt: string; updatedAt: string
   inspectionDate: string | null; inspectionNotes: string | null
   inspectionChecklist: boolean[] | null
+  auditChecklist: AuditChecklistData | null
+  auditScheduledDate: string | null; auditLocation: string | null
+  inspectionConfirmed: boolean; inspectionProposedDate: string | null; inspectionProposedBy: string | null
+  submittedToOgecAt: string | null; ogecReference: string | null
+  avisNumber: string | null; avisDate: string | null; avisPdfUrl: string | null
+  avisPeriodStart: number | null; avisPeriodEnd: number | null; avisTotalCo2eq: number | null
+  expertReportPdfUrl: string | null; dossierCompiledAt: string | null
   certifiedAt: string | null; certificateNumber: string | null
   rejectionReason: string | null; adminNotes: string | null; companyMessage: string | null
   expertName: string | null; expertEmail: string | null; expertUserId: number | null
@@ -35,28 +60,8 @@ interface CertDetail {
   companyName: string; sector: string; rccm: string | null
   entries: Entry[]; byMonth: MonthRow[]; byCategory: CatRow[]; topEmitters: TopRow[]
   documents: DocRow[]
+  auditDocuments: AuditDocRow[]
 }
-
-// ─── Checklist (same as expert) ───────────────────────────────────────────────
-
-const CHECKLIST = [
-  { section: 'Périmètre', text: 'Le périmètre organisationnel est clairement défini et justifié' },
-  { section: 'Périmètre', text: "L'approche de consolidation (contrôle opérationnel/financier) est appropriée" },
-  { section: 'Périmètre', text: "Toutes les sources d'émissions matérielles (Scopes 1, 2, 3) sont incluses" },
-  { section: 'Périmètre', text: "Les éventuelles exclusions sont justifiées" },
-  { section: 'Données', text: "Les données d'activité sont complètes pour la période de référence" },
-  { section: 'Données', text: "Les sources de données sont identifiables et vérifiables (factures, compteurs…)" },
-  { section: 'Données', text: "La cohérence temporelle des données (mensuelle/annuelle) est satisfaisante" },
-  { section: 'Données', text: "Aucune lacune significative n'est détectée dans les données" },
-  { section: 'Calculs', text: "Les facteurs d'émission utilisés sont appropriés, reconnus et à jour" },
-  { section: 'Calculs', text: "La méthode de calcul est conforme à ISO 14064 / GHG Protocol" },
-  { section: 'Calculs', text: "Les conversions d'unités sont correctes et documentées" },
-  { section: 'Calculs', text: "Les totaux par scope correspondent à la somme des entrées individuelles" },
-  { section: 'Qualité', text: "Le niveau d'incertitude des données est acceptable" },
-  { section: 'Qualité', text: "La transparence méthodologique est satisfaisante" },
-  { section: 'Qualité', text: "Le bilan est cohérent avec les caractéristiques déclarées de l'entreprise" },
-  { section: 'Qualité', text: "Les informations légales de l'entreprise (RCCM, secteur) sont vérifiées" },
-]
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -82,12 +87,21 @@ const CAT_LABELS: Record<string, string> = {
 }
 
 const STATUS_LABELS: Record<string, { label: string; cls: string; icon: React.ReactNode }> = {
-  pending:     { label: 'En attente',          cls: 'bg-yellow-500/20 text-yellow-400',  icon: <Clock className="w-3.5 h-3.5" /> },
-  assigned:    { label: 'Expert assigné',       cls: 'bg-blue-500/20 text-blue-400',     icon: <User className="w-3.5 h-3.5" /> },
-  in_progress: { label: "En cours d'inspection",cls: 'bg-violet-500/20 text-violet-400', icon: <AlertCircle className="w-3.5 h-3.5" /> },
-  certified:   { label: 'Certifié',             cls: 'bg-green-500/20 text-green-400',   icon: <CheckCircle className="w-3.5 h-3.5" /> },
-  rejected:    { label: 'Rejeté',               cls: 'bg-red-500/20 text-red-400',       icon: <XCircle className="w-3.5 h-3.5" /> },
+  pending:    { label: 'En attente',           cls: 'bg-yellow-500/20 text-yellow-400',  icon: <Clock className="w-3.5 h-3.5" /> },
+  assigned:   { label: 'Expert assigné',        cls: 'bg-blue-500/20 text-blue-400',     icon: <User className="w-3.5 h-3.5" /> },
+  in_progress:{ label: "En cours d'inspection", cls: 'bg-violet-500/20 text-violet-400', icon: <AlertCircle className="w-3.5 h-3.5" /> },
+  audit_done: { label: 'Audit finalisé',         cls: 'bg-teal-500/20 text-teal-400',    icon: <FileCheck className="w-3.5 h-3.5" /> },
+  certified:  { label: 'Certifié',              cls: 'bg-green-500/20 text-green-400',   icon: <CheckCircle className="w-3.5 h-3.5" /> },
+  rejected:   { label: 'Rejeté',               cls: 'bg-red-500/20 text-red-400',        icon: <XCircle className="w-3.5 h-3.5" /> },
 }
+
+const WORKFLOW_STEPS = [
+  { key: 'pending',     label: 'Demande' },
+  { key: 'assigned',    label: 'Expert' },
+  { key: 'in_progress', label: 'Inspection' },
+  { key: 'audit_done',  label: 'Audit' },
+  { key: 'certified',   label: 'Certifié' },
+]
 
 // ─── Pre-validation ───────────────────────────────────────────────────────────
 
@@ -197,8 +211,10 @@ export default function AdminCertDetailPage() {
   const [openScope, setOpenScope] = useState<number | null>(null)
 
   // Modal state
-  const [modalMode, setModalMode] = useState<'assign' | 'reject' | 'notes' | null>(null)
+  const [modalMode, setModalMode] = useState<'assign' | 'reject' | 'notes' | 'certify' | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [modalError, setModalError] = useState('')
+  const [generatingPdf, setGeneratingPdf] = useState<string | null>(null)
   const [experts, setExperts] = useState<{ id: number; firstName: string; lastName: string; email: string }[]>([])
   const [expertUserId, setExpertUserId] = useState('')
   const [inspectionDate, setInspectionDate] = useState('')
@@ -220,8 +236,9 @@ export default function AdminCertDetailPage() {
       .catch(() => {})
   }, [params.id])
 
-  const openModal = (mode: 'assign' | 'reject' | 'notes') => {
+  const openModal = (mode: typeof modalMode) => {
     setModalMode(mode)
+    setModalError('')
     setExpertUserId('')
     setInspectionDate(cert?.inspectionDate ? cert.inspectionDate.slice(0, 10) : '')
     setAdminNotes(cert?.adminNotes || '')
@@ -231,29 +248,64 @@ export default function AdminCertDetailPage() {
   const submitModal = async () => {
     if (!cert) return
     setSubmitting(true)
+    setModalError('')
     let body: object = { action: modalMode }
     if (modalMode === 'assign') {
       body = { action: 'assign', expertUserId: parseInt(expertUserId), inspectionDate: inspectionDate || null, adminNotes }
     } else if (modalMode === 'reject') {
-      body = { action: 'reject', rejectionReason, adminNotes }
+      if (!rejectionReason.trim()) { setSubmitting(false); setModalError('Le motif du rejet est obligatoire.'); return }
+      body = { action: 'reject', rejectionReason: rejectionReason.trim(), adminNotes }
     } else if (modalMode === 'notes') {
       body = { action: 'notes', adminNotes }
+    } else if (modalMode === 'certify') {
+      body = { action: 'certify', adminNotes }
     }
-    await fetch(`/api/admin/certifications/${cert.id}`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
-    })
-    setSubmitting(false)
-    setModalMode(null)
-    loadCert()
+    try {
+      const res = await fetch(`/api/admin/certifications/${cert.id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setModalError(data.error || `Erreur ${res.status}`)
+        return
+      }
+      setModalMode(null)
+      loadCert()
+    } catch {
+      setModalError('Erreur réseau — réessayez.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
-  const quickAction = async (action: string) => {
+  const quickAction = async (action: string, extra?: object) => {
     if (!cert) return
     await fetch(`/api/admin/certifications/${cert.id}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action }),
+      body: JSON.stringify({ action, ...extra }),
     })
     loadCert()
+  }
+
+  const downloadExpertReport = async () => {
+    setGeneratingPdf('expert-report')
+    try {
+      const res = await fetch(`/api/admin/certifications/${cert!.id}/generate-pdf?type=expert-report`, { method: 'POST' })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: `Erreur ${res.status}` }))
+        alert(`Impossible de générer le rapport: ${err.error || res.statusText}`)
+        return
+      }
+      const blob = await res.blob()
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href     = url
+      a.download = `rapport-expert-${cert!.id}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      alert(`Erreur réseau: ${e}`)
+    } finally { setGeneratingPdf(null) }
   }
 
   if (loading) return <div className="text-center py-20 text-gray-500">Chargement...</div>
@@ -261,20 +313,17 @@ export default function AdminCertDetailPage() {
 
   const s = STATUS_LABELS[cert.status] || { label: cert.status, cls: 'bg-gray-700 text-gray-400', icon: null }
   const total = Number(cert.totalCo2eq) || 0
-  const checklist = Array.isArray(cert.inspectionChecklist) && cert.inspectionChecklist.length === CHECKLIST.length
-    ? cert.inspectionChecklist : Array(CHECKLIST.length).fill(false)
-  const checkedCount = checklist.filter(Boolean).length
-  const checklistPct = Math.round(checkedCount / CHECKLIST.length * 100)
-  const sections = Array.from(new Set(CHECKLIST.map(c => c.section)))
+  const workflowStepIndex = WORKFLOW_STEPS.findIndex(st => st.key === cert.status)
+  const isTerminal = ['certified', 'rejected'].includes(cert.status)
   const entriesByScope: Record<number, Entry[]> = { 1: [], 2: [], 3: [] }
   for (const e of cert.entries) { if (entriesByScope[e.scope]) entriesByScope[e.scope].push(e) }
   const activeMonths = cert.byMonth.filter(m => m.total > 0)
   const maxMonth = Math.max(...cert.byMonth.map(m => m.total), 0.001)
   const annualEntries = cert.entries.filter(e => !e.month)
-  const monthlyTotal  = cert.byMonth.reduce((s, m) => s + m.total, 0)
-  const monthlyScope1 = cert.byMonth.reduce((s, m) => s + m.scope1, 0)
-  const monthlyScope2 = cert.byMonth.reduce((s, m) => s + m.scope2, 0)
-  const monthlyScope3 = cert.byMonth.reduce((s, m) => s + m.scope3, 0)
+  const monthlyTotal  = cert.byMonth.reduce((acc, m) => acc + m.total, 0)
+  const monthlyScope1 = cert.byMonth.reduce((acc, m) => acc + m.scope1, 0)
+  const monthlyScope2 = cert.byMonth.reduce((acc, m) => acc + m.scope2, 0)
+  const monthlyScope3 = cert.byMonth.reduce((acc, m) => acc + m.scope3, 0)
 
   return (
     <div className="space-y-5 max-w-4xl">
@@ -291,16 +340,46 @@ export default function AdminCertDetailPage() {
         </span>
       </div>
 
-      {/* ── Result banner ──────────────────────────────────────────────────── */}
+      {/* ── Workflow progress bar ──────────────────────────────────────────── */}
+      {!['rejected', 'certified'].includes(cert.status) && (
+        <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
+          <p className="text-xs text-gray-500 mb-3 uppercase tracking-wider font-medium">Progression de la certification</p>
+          <div className="flex items-center gap-0">
+            {WORKFLOW_STEPS.map((step, i) => {
+              const done  = workflowStepIndex > i
+              const active = workflowStepIndex === i
+              return (
+                <div key={step.key} className="flex items-center flex-1 last:flex-none">
+                  <div className="flex flex-col items-center">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors ${
+                      done  ? 'bg-emerald-500 border-emerald-500 text-white' :
+                      active ? 'bg-gray-700 border-emerald-500 text-emerald-400' :
+                      'bg-gray-800 border-gray-600 text-gray-600'
+                    }`}>
+                      {done ? '✓' : i + 1}
+                    </div>
+                    <span className={`text-xs mt-1 text-center leading-tight max-w-[54px] ${active ? 'text-emerald-400 font-medium' : done ? 'text-gray-400' : 'text-gray-600'}`}>
+                      {step.label}
+                    </span>
+                  </div>
+                  {i < WORKFLOW_STEPS.length - 1 && (
+                    <div className={`h-0.5 flex-1 mx-1 mb-4 transition-colors ${done ? 'bg-emerald-500' : 'bg-gray-700'}`} />
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Result banners ────────────────────────────────────────────────── */}
       {cert.status === 'certified' && (
         <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 flex items-center gap-3">
           <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
           <div>
             <p className="text-sm font-bold text-green-400">Bilan certifié</p>
             <p className="text-xs text-green-500 mt-0.5">
-              {fmtDate(cert.certifiedAt)}
-              {cert.certificateNumber && ` · Certificat n° ${cert.certificateNumber}`}
-              {cert.expertName && ` · Par ${cert.expertName}`}
+              {fmtDate(cert.certifiedAt)}{cert.certificateNumber && ` · Certificat n° ${cert.certificateNumber}`}{cert.expertName && ` · Par ${cert.expertName}`}
             </p>
           </div>
         </div>
@@ -319,24 +398,35 @@ export default function AdminCertDetailPage() {
       <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
         <p className="text-xs text-gray-500 mb-3 uppercase tracking-wider font-medium">Actions administrateur</p>
         <div className="flex flex-wrap gap-2">
+          {/* Assign expert */}
           {cert.status === 'pending' && (
             <button onClick={() => openModal('assign')}
               className="text-xs text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1.5 rounded-lg transition-colors">
               Assigner un expert
             </button>
           )}
-          {cert.status === 'assigned' && (
-            <button onClick={() => quickAction('in_progress')}
-              className="text-xs text-violet-400 hover:text-violet-300 bg-violet-500/10 hover:bg-violet-500/20 px-3 py-1.5 rounded-lg transition-colors">
-              Marquer en cours
+          {/* Certify — available once audit is done */}
+          {['audit_done', 'in_progress'].includes(cert.status) && (
+            <button onClick={() => openModal('certify')}
+              className="text-xs text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-1.5 rounded-lg transition-colors font-medium">
+              Certifier le bilan
             </button>
           )}
-          {['pending', 'assigned', 'in_progress'].includes(cert.status) && (
+          {/* Expert report PDF */}
+          {cert.expertName && (
+            <button onClick={downloadExpertReport} disabled={generatingPdf === 'expert-report'}
+              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
+              <Download className="w-3.5 h-3.5" />{generatingPdf === 'expert-report' ? '…' : 'Rapport expert PDF'}
+            </button>
+          )}
+          {/* Reject */}
+          {!isTerminal && (
             <button onClick={() => openModal('reject')}
               className="text-xs text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 rounded-lg transition-colors">
               Rejeter
             </button>
           )}
+          {/* Notes */}
           <button onClick={() => openModal('notes')}
             className="text-xs text-gray-400 hover:text-white bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded-lg transition-colors">
             Notes admin
@@ -359,13 +449,27 @@ export default function AdminCertDetailPage() {
             <p className="text-xs text-gray-500 mb-0.5">Expert assigné</p>
             <p className="text-sm font-medium text-white">{cert.expertName}</p>
             {cert.expertEmail && <p className="text-xs text-gray-400">{cert.expertEmail}</p>}
-            {cert.inspectionDate && (
-              <p className="text-xs text-blue-400 mt-1 flex items-center gap-1">
-                <Calendar className="w-3 h-3" />Inspection prévue : {fmtDate(cert.inspectionDate)}
-              </p>
-            )}
           </div>
         </div>
+      )}
+
+      {/* ── Inspection scheduling ─────────────────────────────────────────── */}
+      {cert.expertName && (
+        <InspectionCard
+          data={{
+            certId: cert.id,
+            status: cert.status,
+            auditScheduledDate: cert.auditScheduledDate,
+            auditLocation: cert.auditLocation,
+            inspectionDate: cert.inspectionDate,
+            inspectionConfirmed: cert.inspectionConfirmed,
+            inspectionProposedDate: cert.inspectionProposedDate,
+            inspectionProposedBy: cert.inspectionProposedBy,
+          }}
+          role="admin"
+          onRefresh={loadCert}
+          theme="dark"
+        />
       )}
 
       {/* ── CO₂ Summary ─────────────────────────────────────────────────── */}
@@ -429,6 +533,18 @@ export default function AdminCertDetailPage() {
           </div>
         )
       })()}
+
+      {/* ── Visual analytics (charts) ─────────────────────────────────────── */}
+      <CertEmissionCharts
+        byMonth={cert.byMonth}
+        byCategory={cert.byCategory}
+        topEmitters={cert.topEmitters}
+        entries={cert.entries}
+        scope1={cert.scope1}
+        scope2={cert.scope2}
+        scope3={cert.scope3}
+        totalCo2eq={cert.totalCo2eq}
+      />
 
       {/* ── By category ─────────────────────────────────────────────────── */}
       {cert.byCategory.length > 0 && (
@@ -641,7 +757,7 @@ export default function AdminCertDetailPage() {
         )}
       </Card>
 
-      {/* ── Inspection notes (from expert) ────────────────────────────────── */}
+      {/* ── Expert inspection notes ───────────────────────────────────────── */}
       {cert.inspectionNotes && (
         <div className="bg-gray-800 border border-gray-700 rounded-xl p-4">
           <p className="text-xs text-gray-500 mb-1 flex items-center gap-1.5"><User className="w-3.5 h-3.5" />Notes d&apos;inspection (expert)</p>
@@ -649,44 +765,85 @@ export default function AdminCertDetailPage() {
         </div>
       )}
 
-      {/* ── Inspection checklist (read-only) ─────────────────────────────── */}
-      {cert.inspectionChecklist && (
-        <div className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-700 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
-              <ListChecks className="w-4 h-4" />Grille d&apos;inspection ISO 14064
-            </h2>
-            <div className="flex items-center gap-2">
-              <div className="w-20 h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                <div className="h-full bg-brand-500 rounded-full" style={{ width: `${checklistPct}%` }} />
+      {/* ── Audit checklist — 6-section JSONB (read-only) ────────────────── */}
+      {cert.auditChecklist && (() => {
+        const cl = cert.auditChecklist!
+        const SECTION_LABELS: [keyof AuditChecklistData, string][] = [
+          ['eligibility',     '1 — Éligibilité réglementaire'],
+          ['data_quality',    '2 — Qualité des données'],
+          ['calculations',    '3 — Vérification des calculs'],
+          ['site_visit',      '4 — Visite de site'],
+          ['ogec_compliance', '5 — Conformité réglementaire'],
+        ]
+        const OPINION_LABEL: Record<string, string> = {
+          favorable: 'Favorable', favorable_with_reservations: 'Favorable avec réserves',
+          with_reservations: 'Avec réserves', unfavorable: 'Défavorable',
+        }
+        const OPINION_CLS: Record<string, string> = {
+          favorable: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
+          favorable_with_reservations: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
+          with_reservations: 'bg-orange-500/10 text-orange-400 border-orange-500/30',
+          unfavorable: 'bg-red-500/10 text-red-400 border-red-500/30',
+        }
+        return (
+          <div className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-700 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
+                <ListChecks className="w-4 h-4" />Rapport d&apos;audit — résumé expert
+              </h2>
+              {cert.inspectionDate && (
+                <span className="text-xs text-gray-500">Inspection du {fmtDate(cert.inspectionDate)}</span>
+              )}
+            </div>
+            <div className="p-5 space-y-4">
+              {SECTION_LABELS.map(([sectionKey, label]) => {
+                const section = cl[sectionKey] as Record<string, boolean | string>
+                const boolKeys = Object.entries(section).filter(([, v]) => typeof v === 'boolean')
+                const trueCount = boolKeys.filter(([, v]) => v === true).length
+                const notes = section.notes as string | undefined
+                return (
+                  <div key={sectionKey} className="border border-gray-700/50 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-xs font-semibold text-gray-300">{label}</p>
+                      <span className="text-xs text-gray-500">{trueCount}/{boolKeys.length} validés</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {boolKeys.map(([key, val]) => (
+                        <span key={key} className={`text-xs px-2 py-0.5 rounded-full border ${val ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-gray-700/40 text-gray-500 border-gray-700'}`}>
+                          {val ? '✓' : '✗'} {key.replace(/_/g, ' ')}
+                        </span>
+                      ))}
+                    </div>
+                    {notes && <p className="text-xs text-gray-400 italic">{notes}</p>}
+                  </div>
+                )
+              })}
+
+              {/* Opinion */}
+              <div className="border border-gray-700/50 rounded-xl p-4">
+                <p className="text-xs font-semibold text-gray-300 mb-3">6 — Avis motivé de l&apos;expert</p>
+                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-medium mb-3 ${OPINION_CLS[cl.opinion.overall_opinion] ?? 'bg-gray-700/40 text-gray-400 border-gray-700'}`}>
+                  {OPINION_LABEL[cl.opinion.overall_opinion] ?? cl.opinion.overall_opinion}
+                </div>
+                <p className={`text-xs font-medium mb-2 ${cl.opinion.certification_recommended ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {cl.opinion.certification_recommended ? '✓ Certification recommandée' : '✗ Certification non recommandée'}
+                </p>
+                {cl.opinion.reservations.length > 0 && (
+                  <div className="space-y-1 mb-2">
+                    {cl.opinion.reservations.map((r, i) => (
+                      <p key={i} className="text-xs text-amber-300 bg-amber-500/10 rounded px-2 py-1">• {r}</p>
+                    ))}
+                  </div>
+                )}
+                {cl.opinion.major_findings && <p className="text-xs text-gray-400 mt-1"><span className="text-gray-500">Constatations : </span>{cl.opinion.major_findings}</p>}
+                {cl.opinion.recommendations && <p className="text-xs text-gray-400 mt-1"><span className="text-gray-500">Recommandations : </span>{cl.opinion.recommendations}</p>}
               </div>
-              <span className="text-xs font-medium text-gray-400">{checkedCount}/{CHECKLIST.length}</span>
             </div>
           </div>
-          <div className="p-5 space-y-5">
-            {sections.map(section => (
-              <div key={section}>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{section}</p>
-                <div className="space-y-2">
-                  {CHECKLIST.map((item, i) => {
-                    if (item.section !== section) return null
-                    return (
-                      <div key={i} className={`flex items-start gap-3 p-3 rounded-xl ${checklist[i] ? 'bg-green-500/10 border border-green-500/20' : 'bg-gray-700/20 border border-gray-700/40'}`}>
-                        <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 mt-0.5 border ${checklist[i] ? 'bg-green-500 border-green-500' : 'bg-transparent border-gray-600'}`}>
-                          {checklist[i] && <CheckCircle className="w-3.5 h-3.5 text-white" />}
-                        </div>
-                        <span className={`text-sm leading-snug ${checklist[i] ? 'text-green-300' : 'text-gray-400'}`}>{item.text}</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+        )
+      })()}
 
-      {/* ── Documents ────────────────────────────────────────────────────── */}
+      {/* ── Certification documents ──────────────────────────────────────── */}
       {cert.documents.length > 0 && (
         <Card title={`Documents joints (${cert.documents.length})`} icon={FileText}>
           <div className="space-y-2">
@@ -702,15 +859,45 @@ export default function AdminCertDetailPage() {
         </Card>
       )}
 
+      {/* ── Justificatifs du bilan (audit_documents) ─────────────────────── */}
+      {cert.auditDocuments && cert.auditDocuments.length > 0 && (
+        <Card title={`Justificatifs du bilan (${cert.auditDocuments.length})`} icon={FileCheck}>
+          <p className="text-xs text-gray-500 mb-3">Documents justificatifs uploadés par l'entreprise pour chaque source d'émission.</p>
+          <div className="space-y-1.5">
+            {cert.auditDocuments.map(doc => (
+              <div key={doc.id} className="flex items-center justify-between bg-gray-800/40 rounded-lg px-3 py-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-gray-200 truncate">{doc.originalName}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {doc.scope ? `Scope ${doc.scope}` : ''}{doc.category ? ` · ${doc.category}` : ''}{doc.factorName ? ` · ${doc.factorName}` : ''}
+                    {' · '}{(doc.fileSize / 1024).toFixed(1)} Ko
+                  </p>
+                </div>
+                <a
+                  href={`/api/documents/${doc.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-3 flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs px-3 py-1.5 rounded-lg transition-colors flex-shrink-0"
+                >
+                  <Download className="w-3 h-3" />
+                  Ouvrir
+                </a>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       {/* ── Modal ────────────────────────────────────────────────────────── */}
       {modalMode && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md">
-            <div className="flex items-center justify-between p-5 border-b border-gray-700">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-gray-700 sticky top-0 bg-gray-900 z-10">
               <h2 className="text-lg font-bold text-white">
-                {modalMode === 'assign' && 'Assigner un expert'}
-                {modalMode === 'reject' && 'Rejeter la demande'}
-                {modalMode === 'notes' && 'Notes administrateur'}
+                {modalMode === 'assign'  && 'Assigner un expert'}
+                {modalMode === 'reject'  && 'Rejeter la demande'}
+                {modalMode === 'notes'   && 'Notes administrateur'}
+                {modalMode === 'certify' && 'Certifier le bilan'}
               </h2>
               <button onClick={() => setModalMode(null)} className="p-1.5 text-gray-400 hover:text-white">
                 <X className="w-5 h-5" />
@@ -718,6 +905,12 @@ export default function AdminCertDetailPage() {
             </div>
             <div className="p-5 space-y-4">
               <p className="text-sm text-gray-400">{cert.companyName} · {cert.assessmentName}</p>
+
+              {modalError && (
+                <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-lg px-3 py-2.5">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />{modalError}
+                </div>
+              )}
 
               {modalMode === 'assign' && (
                 <>
@@ -747,6 +940,23 @@ export default function AdminCertDetailPage() {
                     <textarea value={adminNotes} onChange={e => setAdminNotes(e.target.value)} rows={3}
                       className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-brand-500 resize-none"
                       placeholder="Notes internes..." />
+                  </div>
+                </>
+              )}
+
+              {modalMode === 'certify' && (
+                <>
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+                    <p className="text-sm text-emerald-300 font-medium mb-1">Confirmer la certification</p>
+                    <p className="text-xs text-emerald-400/80">
+                      Un numéro de certificat GreenLeaves sera généré automatiquement et le bilan passera au statut <strong>Certifié</strong>.
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-300 mb-1.5">Notes admin (optionnel)</label>
+                    <textarea value={adminNotes} onChange={e => setAdminNotes(e.target.value)} rows={2}
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-500 resize-none"
+                      placeholder="Observations, conditions particulières…" />
                   </div>
                 </>
               )}
@@ -783,11 +993,19 @@ export default function AdminCertDetailPage() {
               </button>
               <button
                 onClick={submitModal}
-                disabled={submitting || (modalMode === 'assign' && !expertUserId) || (modalMode === 'reject' && !rejectionReason)}
+                disabled={
+                  submitting ||
+                  (modalMode === 'assign' && !expertUserId) ||
+                  (modalMode === 'reject' && !rejectionReason)
+                }
                 className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-white
-                  ${modalMode === 'reject' ? 'bg-red-600 hover:bg-red-700' : 'bg-brand-600 hover:bg-brand-700'}`}
+                  ${modalMode === 'reject' ? 'bg-red-600 hover:bg-red-700' : modalMode === 'certify' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-brand-600 hover:bg-brand-700'}`}
               >
-                {submitting ? 'En cours...' : modalMode === 'assign' ? 'Assigner' : modalMode === 'reject' ? 'Rejeter' : 'Sauvegarder'}
+                {submitting ? 'En cours...' :
+                  modalMode === 'assign'  ? 'Assigner' :
+                  modalMode === 'reject'  ? 'Rejeter' :
+                  modalMode === 'certify' ? 'Certifier le bilan' :
+                  'Sauvegarder'}
               </button>
             </div>
           </div>

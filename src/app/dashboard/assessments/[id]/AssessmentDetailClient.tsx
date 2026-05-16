@@ -164,8 +164,16 @@ export default function AssessmentDetailClient() {
   const [availableYears, setAvailableYears] = useState<number[]>([])
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
   const [saving, setSaving] = useState(false)
-  const [saveMsg, setSaveMsg] = useState('')
   const [showSummary, setShowSummary] = useState(false)
+  // Raw string values for decimal-safe inputs (factorId_year_month → raw string)
+  const [rawValues, setRawValues] = useState<Record<string, string>>({})
+  // Toast notification
+  const [toast, setToast] = useState<{ visible: boolean; type: 'success' | 'error'; message: string }>({ visible: false, type: 'success', message: '' })
+
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setToast({ visible: true, type, message })
+    setTimeout(() => setToast(t => ({ ...t, visible: false })), 4000)
+  }
 
   // Document upload state
   const [docs, setDocs] = useState<AuditDoc[]>([])
@@ -439,7 +447,6 @@ export default function AssessmentDetailClient() {
   /* ---- Save (all years x 12 months) ---- */
   const handleSave = async () => {
     setSaving(true)
-    setSaveMsg('')
     try {
       const allEntries: Omit<EntryRow, 'id'>[] = []
       // Collect all years that have data
@@ -493,13 +500,13 @@ export default function AssessmentDetailClient() {
       })
 
       if (res.ok) {
-        setSaveMsg('Sauvegarde reussie !')
-        setTimeout(() => setSaveMsg(''), 3000)
+        showToast('success', `${allEntries.length} entrée(s) sauvegardée(s) avec succès.`)
+        setRawValues({}) // clear raw inputs after successful save
       } else {
-        setSaveMsg('Erreur de sauvegarde')
+        showToast('error', 'Erreur lors de la sauvegarde. Réessayez.')
       }
     } catch {
-      setSaveMsg('Erreur de connexion')
+      showToast('error', 'Erreur de connexion au serveur.')
     } finally {
       setSaving(false)
     }
@@ -531,14 +538,15 @@ export default function AssessmentDetailClient() {
           <p className="text-gray-500 text-sm truncate">{assessment?.site_name} &bull; Annee {assessment?.year}</p>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
-          {saveMsg && (
-            <span className={`text-sm font-medium flex items-center gap-1 ${saveMsg.includes('Erreur') ? 'text-red-500' : 'text-brand-600'}`}>
-              {saveMsg.includes('Erreur') ? <AlertCircle className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
-              {saveMsg}
-            </span>
-          )}
-          <button onClick={() => setShowSummary(!showSummary)} className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors inline-flex items-center gap-2">
-            <BarChart3 className="w-4 h-4" /> Synthese
+          <button
+            onClick={() => setShowSummary(!showSummary)}
+            className={`px-4 py-2 text-sm rounded-lg transition-colors inline-flex items-center gap-2 font-medium border ${
+              showSummary
+                ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
+                : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            <BarChart3 className="w-4 h-4" /> Synthèse
           </button>
           <button onClick={handleSave} disabled={saving} className="btn-primary inline-flex items-center gap-2 disabled:opacity-50">
             <Save className="w-4 h-4" /> {saving ? 'Sauvegarde...' : 'Sauvegarder'}
@@ -595,54 +603,87 @@ export default function AssessmentDetailClient() {
 
       {/* Certification Request Modal */}
       {showCertModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-            <div className="p-6 border-b border-gray-100">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-brand-100 rounded-xl flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-brand-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900">Certifier ce bilan carbone</h3>
-                    <p className="text-sm text-gray-500">Par nos experts accredites</p>
-                  </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-brand-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-5 h-5 text-brand-600" />
                 </div>
-                <button onClick={() => setShowCertModal(false)} className="p-1.5 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5 text-gray-400" /></button>
-              </div>
-            </div>
-            <div className="p-6">
-              <div className="bg-brand-50 rounded-xl p-4 mb-5">
-                <div className="flex items-start gap-3">
-                  <Award className="w-5 h-5 text-brand-600 flex-shrink-0 mt-0.5" />
-                  <div className="text-sm text-brand-800">
-                    <p className="font-semibold mb-1">Processus de certification</p>
-                    <ol className="list-decimal list-inside space-y-1 text-brand-700">
-                      <li>Votre demande est envoyee a notre equipe</li>
-                      <li>Un expert est assigne pour l&apos;audit</li>
-                      <li>Inspection sur site et verification des donnees</li>
-                      <li>Rapport de certification delivre</li>
-                    </ol>
-                  </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 leading-tight">Certifier ce bilan carbone</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Demande d&apos;audit par nos experts accredites</p>
                 </div>
               </div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Message (optionnel)</label>
-              <textarea
-                value={certMessage}
-                onChange={(e) => setCertMessage(e.target.value)}
-                className="input-field h-24 resize-none"
-                placeholder="Informations complementaires pour nos experts..."
-              />
+              <button
+                onClick={() => setShowCertModal(false)}
+                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+              >
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
             </div>
-            <div className="p-6 border-t border-gray-100 flex items-center justify-end gap-3">
-              <button onClick={() => setShowCertModal(false)} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+
+              {/* Steps */}
+              <div className="bg-gradient-to-br from-brand-50 to-emerald-50 border border-brand-100 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Award className="w-4 h-4 text-brand-600" />
+                  <p className="text-sm font-semibold text-brand-800">Processus de certification</p>
+                </div>
+                <ol className="space-y-2">
+                  {[
+                    'Votre demande est transmise a notre equipe',
+                    'Un expert certifie est assigne pour l\'audit',
+                    'Inspection sur site et verification des donnees',
+                    'Rapport et certificat officiel delivres',
+                  ].map((step, i) => (
+                    <li key={i} className="flex items-start gap-2.5 text-sm text-brand-700">
+                      <span className="w-5 h-5 rounded-full bg-brand-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                        {i + 1}
+                      </span>
+                      {step}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              {/* Message */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Message pour l&apos;expert <span className="text-gray-400 font-normal">(optionnel)</span>
+                </label>
+                <textarea
+                  value={certMessage}
+                  onChange={(e) => setCertMessage(e.target.value)}
+                  rows={4}
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400 resize-none transition-colors"
+                  placeholder="Precisions sur votre bilan, contraintes particulieres, questions..."
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 flex-shrink-0 bg-gray-50 rounded-b-2xl">
+              <button
+                onClick={() => setShowCertModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+              >
                 Annuler
               </button>
-              <button onClick={handleCertRequest} disabled={certSubmitting} className="btn-primary inline-flex items-center gap-2 disabled:opacity-50">
+              <button
+                onClick={handleCertRequest}
+                disabled={certSubmitting}
+                className="btn-primary inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <Shield className="w-4 h-4" />
-                {certSubmitting ? 'Envoi...' : 'Envoyer la demande'}
+                {certSubmitting ? 'Envoi en cours...' : 'Envoyer la demande'}
               </button>
             </div>
+
           </div>
         </div>
       )}
@@ -867,20 +908,35 @@ export default function AssessmentDetailClient() {
                                   <div className="w-28 text-right px-2 py-1.5 text-sm text-gray-600 bg-gray-50 rounded-lg border border-gray-100">
                                     {qty ? formatNum(qty) : '-'}
                                   </div>
-                                ) : (
-                                  <input
-                                    type="number"
-                                    value={qty === 0 ? '' : qty}
-                                    onChange={e => {
-                                      const val = e.target.value
-                                      setQuantity(factor.id, activeYear, activeMonth, val === '' ? 0 : parseFloat(val) || 0)
-                                    }}
-                                    className="w-28 text-right px-2 py-1.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none text-sm bg-white"
-                                    min="0"
-                                    step="any"
-                                    placeholder="0"
-                                  />
-                                )}
+                                ) : (() => {
+                                  const rawKey = `${factor.id}_${activeYear}_${activeMonth}`
+                                  const displayed = rawKey in rawValues
+                                    ? rawValues[rawKey]
+                                    : (qty > 0 ? String(qty) : '')
+                                  return (
+                                    <input
+                                      type="text"
+                                      inputMode="decimal"
+                                      value={displayed}
+                                      onChange={e => {
+                                        const raw = e.target.value
+                                        // Allow only digits, dot, comma
+                                        if (raw !== '' && !/^[\d]*[.,]?[\d]*$/.test(raw)) return
+                                        const normalized = raw.replace(',', '.')
+                                        setRawValues(prev => ({ ...prev, [rawKey]: raw }))
+                                        const parsed = parseFloat(normalized)
+                                        setQuantity(factor.id, activeYear, activeMonth, isNaN(parsed) ? 0 : parsed)
+                                      }}
+                                      onBlur={e => {
+                                        const parsed = parseFloat(e.target.value.replace(',', '.')) || 0
+                                        setRawValues(prev => ({ ...prev, [rawKey]: parsed > 0 ? String(parsed) : '' }))
+                                        setQuantity(factor.id, activeYear, activeMonth, parsed)
+                                      }}
+                                      className="w-28 text-right px-2 py-1.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none text-sm bg-white"
+                                      placeholder="0"
+                                    />
+                                  )
+                                })()}
                               </td>
                               <td className="px-3 py-3 text-right text-xs text-gray-600 font-medium">{factor.factorTotal}</td>
                               <td className="px-3 py-3 text-right font-semibold text-gray-900">
@@ -1048,6 +1104,26 @@ export default function AssessmentDetailClient() {
               {getDocCount(docPanel.factorId)} justificatif(s) au total pour cette source
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ---- TOAST NOTIFICATION ---- */}
+      {toast.visible && (
+        <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-4 bg-white rounded-2xl shadow-2xl border max-w-sm transition-all duration-300 ${toast.type === 'success' ? 'border-green-200' : 'border-red-200'}`}>
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${toast.type === 'success' ? 'bg-green-100' : 'bg-red-100'}`}>
+            {toast.type === 'success'
+              ? <CheckCircle2 className="w-5 h-5 text-green-600" />
+              : <AlertCircle className="w-5 h-5 text-red-600" />}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className={`text-sm font-semibold ${toast.type === 'success' ? 'text-green-900' : 'text-red-900'}`}>
+              {toast.type === 'success' ? 'Bilan sauvegardé' : 'Erreur de sauvegarde'}
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">{toast.message}</p>
+          </div>
+          <button onClick={() => setToast(t => ({ ...t, visible: false }))} className="p-1 hover:bg-gray-100 rounded-lg flex-shrink-0">
+            <X className="w-4 h-4 text-gray-400" />
+          </button>
         </div>
       )}
 

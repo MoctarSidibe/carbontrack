@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
+
 // GET: Check current subscription status
 export async function GET() {
   try {
@@ -65,29 +67,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Vous avez deja un abonnement actif' }, { status: 409 })
     }
 
-    // Load dynamic price and duration from platform_settings
-    let amount = 250000
-    let durationDays = 30
-    try {
-      const priceRow = await query(`SELECT value FROM platform_settings WHERE key = 'monthly_price'`, [])
-      const durRow = await query(`SELECT value FROM platform_settings WHERE key = 'subscription_duration_days'`, [])
-      if (priceRow.rows.length > 0) amount = parseInt(priceRow.rows[0].value) || 250000
-      if (durRow.rows.length > 0) durationDays = parseInt(durRow.rows[0].value) || 30
-    } catch { /* table may not exist yet, use defaults */ }
+    const amount = 3_000_000
+    const durationDays = 365
 
-    // Simulate payment processing
-    // In production, this is where you'd call the Airtel Money API or Moov Money / Visa payment gateway
     const paymentRef = `CT-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
 
-    // Simulate a small delay like a real payment
-    await new Promise(resolve => setTimeout(resolve, 1500))
-
-    // Create subscription record
     const result = await query(
       `INSERT INTO subscriptions (company_id, plan, amount, currency, payment_method, payment_ref, phone_payment, status, starts_at, expires_at)
-       VALUES ($1, 'monthly', $2, 'FCFA', $3, $4, $5, 'active', NOW(), NOW() + ($6 || ' days')::INTERVAL)
+       VALUES ($1, 'annual', $2, 'FCFA', $3, $4, $5, 'active', NOW(), NOW() + ($6 || ' days')::INTERVAL)
        RETURNING *`,
-      [session.companyId, amount, paymentMethod, paymentRef, phoneNumber || null, durationDays]
+      [session.companyId, amount, paymentMethod || 'direct', paymentRef, phoneNumber || null, durationDays]
     )
 
     const sub = result.rows[0]

@@ -5,10 +5,25 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'carbontrack-secret-key-change-in-production'
 )
 
+const COOKIE = {
+  admin:  'adm_token',
+  expert: 'exp_token',
+  user:   'token',
+}
+
 function roleHome(role: unknown) {
   if (role === 'admin') return '/admin'
   if (role === 'expert') return '/expert'
   return '/dashboard'
+}
+
+async function verifyRole(token: string): Promise<string | null> {
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET)
+    return (payload.role as string) ?? null
+  } catch {
+    return null
+  }
 }
 
 export async function middleware(request: NextRequest) {
@@ -16,85 +31,43 @@ export async function middleware(request: NextRequest) {
 
   // ── Admin routes (except /admin/login) ──────────────────────────────────
   if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
-    const token = request.cookies.get('token')?.value
-
-    if (!token) {
-      return NextResponse.redirect(new URL('/admin/login', request.url))
-    }
-
-    try {
-      const { payload } = await jwtVerify(token, JWT_SECRET)
-      if (payload.role !== 'admin') {
-        return NextResponse.redirect(new URL(roleHome(payload.role), request.url))
-      }
-    } catch {
-      return NextResponse.redirect(new URL('/admin/login', request.url))
-    }
+    const token = request.cookies.get(COOKIE.admin)?.value
+    if (!token) return NextResponse.redirect(new URL('/admin/login', request.url))
+    const role = await verifyRole(token)
+    if (role !== 'admin') return NextResponse.redirect(new URL('/admin/login', request.url))
   }
 
-  // ── If already logged-in admin visits /admin/login, skip to admin ────────
+  // ── Already-logged-in admin visits /admin/login → skip to /admin ─────────
   if (pathname.startsWith('/admin/login')) {
-    const token = request.cookies.get('token')?.value
-    if (token) {
-      try {
-        const { payload } = await jwtVerify(token, JWT_SECRET)
-        if (payload.role === 'admin') {
-          return NextResponse.redirect(new URL('/admin', request.url))
-        }
-      } catch {
-        // bad token — let them see the login page
-      }
+    const token = request.cookies.get(COOKIE.admin)?.value
+    if (token && (await verifyRole(token)) === 'admin') {
+      return NextResponse.redirect(new URL('/admin', request.url))
     }
   }
 
   // ── Expert routes (except /expert/login) ────────────────────────────────
   if (pathname.startsWith('/expert') && !pathname.startsWith('/expert/login')) {
-    const token = request.cookies.get('token')?.value
-
-    if (!token) {
-      return NextResponse.redirect(new URL('/expert/login', request.url))
-    }
-
-    try {
-      const { payload } = await jwtVerify(token, JWT_SECRET)
-      if (payload.role !== 'expert') {
-        return NextResponse.redirect(new URL(roleHome(payload.role), request.url))
-      }
-    } catch {
-      return NextResponse.redirect(new URL('/expert/login', request.url))
-    }
+    const token = request.cookies.get(COOKIE.expert)?.value
+    if (!token) return NextResponse.redirect(new URL('/expert/login', request.url))
+    const role = await verifyRole(token)
+    if (role !== 'expert') return NextResponse.redirect(new URL('/expert/login', request.url))
   }
 
-  // ── If already logged-in expert visits /expert/login, skip to expert ────
+  // ── Already-logged-in expert visits /expert/login → skip to /expert ──────
   if (pathname.startsWith('/expert/login')) {
-    const token = request.cookies.get('token')?.value
-    if (token) {
-      try {
-        const { payload } = await jwtVerify(token, JWT_SECRET)
-        if (payload.role === 'expert') {
-          return NextResponse.redirect(new URL('/expert', request.url))
-        }
-      } catch {
-        // bad token — let them see the login page
-      }
+    const token = request.cookies.get(COOKIE.expert)?.value
+    if (token && (await verifyRole(token)) === 'expert') {
+      return NextResponse.redirect(new URL('/expert', request.url))
     }
   }
 
-  // ── Dashboard / subscription: redirect non-company users to their portal ─
+  // ── Dashboard: redirect admins/experts to their portal ───────────────────
   if (pathname === '/dashboard' || pathname.startsWith('/dashboard/') || pathname === '/subscription') {
-    const token = request.cookies.get('token')?.value
+    const token = request.cookies.get(COOKIE.user)?.value
     if (token) {
-      try {
-        const { payload } = await jwtVerify(token, JWT_SECRET)
-        if (payload.role === 'expert') {
-          return NextResponse.redirect(new URL('/expert', request.url))
-        }
-        if (payload.role === 'admin') {
-          return NextResponse.redirect(new URL('/admin', request.url))
-        }
-      } catch {
-        // bad/expired token — let the page's own auth handle it
-      }
+      const role = await verifyRole(token)
+      if (role === 'expert') return NextResponse.redirect(new URL('/expert', request.url))
+      if (role === 'admin')  return NextResponse.redirect(new URL('/admin', request.url))
     }
   }
 

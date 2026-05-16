@@ -1,11 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { ShieldCheck, Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { ShieldCheck, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react'
 
 export default function AdminLoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -34,13 +32,13 @@ export default function AdminLoginPage() {
 
       if (data.role !== 'admin') {
         setError('Accès refusé. Ce portail est réservé aux administrateurs.')
-        // Clear the cookie that was just set for a non-admin
-        await fetch('/api/auth/logout', { method: 'POST' })
+        // Only clear the specific cookie set for this login — never wipe other portals
+        await fetch('/api/auth/clear-portal?portal=admin', { method: 'POST' })
         setLoading(false)
         return
       }
 
-      router.push('/admin')
+      window.location.href = '/admin'
     } catch {
       setError('Erreur réseau. Vérifiez votre connexion.')
       setLoading(false)
@@ -112,9 +110,12 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors text-sm mt-2"
+              className="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors text-sm mt-2 flex items-center justify-center gap-2"
             >
-              {loading ? 'Connexion...' : 'Se connecter'}
+              {loading
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> Connexion en cours...</>
+                : 'Se connecter'
+              }
             </button>
           </form>
         </div>

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import { notifyAllAdmins } from '@/lib/notifications'
+
+export const dynamic = 'force-dynamic'
 
 // GET: List all certification requests for the company
 export async function GET() {
@@ -21,14 +24,25 @@ export async function GET() {
       [session.companyId]
     )
 
-    // Get documents for each certification
-    const certifications = await Promise.all(
-      result.rows.map(async (cert) => {
-        const docs = await query(
-          `SELECT id, doc_type, original_name, file_size, mime_type, created_at 
-           FROM certification_documents WHERE certification_id = $1 ORDER BY created_at DESC`,
-          [cert.id]
-        )
+    // Batch-fetch all documents in one query then group in memory
+    const certIds = result.rows.map((r: { id: number }) => r.id)
+    let docsMap: Record<number, Record<string, unknown>[]> = {}
+    if (certIds.length > 0) {
+      const docsResult = await query(
+        `SELECT id, certification_id, doc_type, original_name, file_size, mime_type, created_at
+         FROM certification_documents
+         WHERE certification_id = ANY($1::int[])
+         ORDER BY created_at DESC`,
+        [certIds]
+      )
+      for (const d of docsResult.rows) {
+        if (!docsMap[d.certification_id]) docsMap[d.certification_id] = []
+        docsMap[d.certification_id].push(d)
+      }
+    }
+
+    const certifications = result.rows.map((cert) => {
+        const certDocs = docsMap[cert.id] ?? []
         return {
           id: cert.id,
           assessmentId: cert.assessment_id,
@@ -50,7 +64,19 @@ export async function GET() {
           certifiedAt: cert.certified_at,
           certificateNumber: cert.certificate_number,
           requestedAt: cert.requested_at,
-          documents: docs.rows.map(d => ({
+          auditScheduledDate: cert.audit_scheduled_date,
+          auditLocation: cert.audit_location,
+          submittedToOgecAt: cert.submitted_to_ogec_at,
+          ogecReference: cert.ogec_reference,
+          avisNumber: cert.avis_number,
+          avisDate: cert.avis_date,
+          avisPdfUrl: cert.avis_pdf_url,
+          avisPeriodStart: cert.avis_period_start,
+          avisPeriodEnd: cert.avis_period_end,
+          avisTotalCo2eq: cert.avis_total_co2eq ? parseFloat(cert.avis_total_co2eq) : null,
+          expertReportPdfUrl: cert.expert_report_pdf_url,
+          dossierCompiledAt: cert.dossier_compiled_at,
+          documents: certDocs.map(d => ({
             id: d.id,
             docType: d.doc_type,
             originalName: d.original_name,
@@ -60,7 +86,6 @@ export async function GET() {
           })),
         }
       })
-    )
 
     return NextResponse.json(certifications)
   } catch (error) {
@@ -114,6 +139,17 @@ export async function POST(request: NextRequest) {
        VALUES ($1, $2, 'pending', $3)
        RETURNING *`,
       [assessmentId, session.companyId, message || null]
+    )
+
+    const newCertId = result.rows[0].id
+    const assessmentName = assessment.rows[0].name
+
+    // Notify all admins about the new request
+    await notifyAllAdmins(
+      'cert_request',
+      'Nouvelle demande de certification',
+      `${assessmentName} — demande soumise par l'entreprise`,
+      `/admin/certifications/${newCertId}`
     )
 
     return NextResponse.json({

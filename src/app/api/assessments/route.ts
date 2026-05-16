@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession()
@@ -9,15 +11,22 @@ export async function GET(request: NextRequest) {
 
     const siteId = request.nextUrl.searchParams.get('siteId')
     
-    let sql = `SELECT a.*, s.name as site_name, s.type as site_type 
-               FROM assessments a 
-               JOIN sites s ON a.site_id = s.id 
+    const year = request.nextUrl.searchParams.get('year')
+
+    let sql = `SELECT a.*, s.name as site_name, s.type as site_type,
+                      s.country as site_country, s.address as site_address
+               FROM assessments a
+               JOIN sites s ON a.site_id = s.id
                WHERE s.company_id = $1`
     const params: unknown[] = [session.companyId]
 
     if (siteId) {
-      sql += ' AND a.site_id = $2'
+      sql += ` AND a.site_id = $${params.length + 1}`
       params.push(siteId)
+    }
+    if (year) {
+      sql += ` AND a.year = $${params.length + 1}`
+      params.push(parseInt(year))
     }
     sql += ' ORDER BY a.created_at DESC'
 
@@ -34,7 +43,7 @@ export async function POST(request: NextRequest) {
     const session = await getSession()
     if (!session) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
 
-    const { siteId, name, year, approach } = await request.json()
+    const { siteId, name, year, approach, start_month, end_month } = await request.json()
     if (!siteId || !name || !year) {
       return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 })
     }
@@ -45,8 +54,10 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await query(
-      'INSERT INTO assessments (site_id, name, year, approach, status, created_by) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [siteId, name, year, approach || 'operational_control', 'draft', session.userId]
+      `INSERT INTO assessments (site_id, name, year, approach, status, created_by, start_month, end_month)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [siteId, name, year, approach || 'operational_control', 'draft', session.userId,
+       start_month || 1, end_month || 12]
     )
     return NextResponse.json(result.rows[0], { status: 201 })
   } catch (error) {

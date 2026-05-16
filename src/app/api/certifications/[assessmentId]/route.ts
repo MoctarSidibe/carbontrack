@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { getSession } from '@/lib/auth'
+
+export const dynamic = 'force-dynamic'
 
 // GET: Get certification status for a specific assessment
 export async function GET(

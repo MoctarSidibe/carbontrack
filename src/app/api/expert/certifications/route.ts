@@ -1,20 +1,15 @@
-import { NextResponse } from 'next/server'
+﻿import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { query } from '@/lib/db'
 
-async function ensureColumns() {
-  await query(`ALTER TABLE certification_requests ADD COLUMN IF NOT EXISTS expert_user_id INTEGER REFERENCES users(id)`, [])
-  await query(`ALTER TABLE certification_requests ADD COLUMN IF NOT EXISTS inspection_checklist TEXT`, [])
-}
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    const session = await getSession()
+    const session = await getSession('expert')
     if (!session || session.role !== 'expert') {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+      return NextResponse.json({ error: 'AccÃ¨s refusÃ©' }, { status: 403 })
     }
-
-    await ensureColumns()
 
     const result = await query(
       `SELECT

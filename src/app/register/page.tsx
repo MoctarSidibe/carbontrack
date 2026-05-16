@@ -1,12 +1,11 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Leaf, Mail, Lock, User, Building2, ArrowRight, AlertCircle, Phone, Upload, X } from 'lucide-react'
+import LoadingScreen from '@/components/LoadingScreen'
 
 export default function RegisterPage() {
-  const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [form, setForm] = useState({
     firstName: '',
@@ -23,10 +22,58 @@ export default function RegisterPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const sectors = [
-    'Industrie', 'Services', 'Commerce', 'Transport & Logistique',
-    'Construction & BTP', 'Agriculture', 'Energie', 'Technologie',
-    'Sante', 'Education', 'Finance & Assurance', 'Immobilier', 'Autre',
+  const sectorGroups = [
+    {
+      group: 'Ressources naturelles & Énergie',
+      options: [
+        { value: 'petrole_gaz',      label: 'Pétrole & Gaz' },
+        { value: 'mines',            label: 'Mines & Extraction minière' },
+        { value: 'foresterie',       label: 'Foresterie, Bois & Papier' },
+        { value: 'agriculture',      label: 'Agriculture & Agro-industrie' },
+        { value: 'peche',            label: 'Pêche & Aquaculture' },
+        { value: 'eau',              label: 'Eau & Assainissement' },
+        { value: 'energie',          label: 'Énergie & Utilities' },
+      ],
+    },
+    {
+      group: 'Industrie & Production',
+      options: [
+        { value: 'industrie',        label: 'Industrie manufacturière' },
+        { value: 'construction',     label: 'Construction & BTP' },
+        { value: 'chimie',           label: 'Chimie & Pétrochimie' },
+        { value: 'agroalimentaire',  label: 'Agroalimentaire & Boissons' },
+        { value: 'emballage',        label: 'Imprimerie & Emballage' },
+      ],
+    },
+    {
+      group: 'Services & Tertiaire',
+      options: [
+        { value: 'commerce',         label: 'Commerce & Distribution' },
+        { value: 'transport',        label: 'Transport & Logistique' },
+        { value: 'banque',           label: 'Finance, Banque & Assurance' },
+        { value: 'telecom',          label: 'Télécommunications' },
+        { value: 'tech',             label: 'Technologies & Numérique' },
+        { value: 'sante',            label: 'Santé & Pharmaceutique' },
+        { value: 'education',        label: 'Éducation & Formation' },
+        { value: 'immobilier',       label: 'Immobilier & Foncier' },
+        { value: 'tourisme',         label: 'Tourisme, Hôtellerie & Restauration' },
+        { value: 'medias',           label: 'Médias & Communication' },
+      ],
+    },
+    {
+      group: 'Secteur public & Organisations',
+      options: [
+        { value: 'administration',   label: 'Administrations & Services publics' },
+        { value: 'ong',              label: 'ONG & Associations' },
+        { value: 'organisations_int',label: 'Organisations internationales' },
+      ],
+    },
+    {
+      group: 'Autre',
+      options: [
+        { value: 'autre',            label: 'Autre secteur' },
+      ],
+    },
   ]
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,6 +110,7 @@ export default function RegisterPage() {
 
       if (!res.ok) {
         setError(data.error || 'Erreur lors de l\'inscription')
+        setLoading(false)
         return
       }
 
@@ -73,10 +121,9 @@ export default function RegisterPage() {
         await fetch('/api/company/logo', { method: 'POST', body: fd })
       }
 
-      router.push('/dashboard')
+      window.location.href = '/dashboard'
     } catch {
       setError('Erreur de connexion au serveur')
-    } finally {
       setLoading(false)
     }
   }
@@ -84,6 +131,8 @@ export default function RegisterPage() {
   const updateField = (field: string, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }))
   }
+
+  if (loading) return <LoadingScreen theme="light" label="Création de votre compte..." />
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
@@ -164,19 +213,26 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">RCCM</label>
-                <input type="text" value={form.rccm} onChange={e => updateField('rccm', e.target.value)}
-                  className="input-field" placeholder="CD/KIN/RCCM/24-B-00123" maxLength={50} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Secteur d&apos;activité</label>
-                <select value={form.sector} onChange={e => updateField('sector', e.target.value)} className="input-field">
-                  <option value="">Sélectionner...</option>
-                  {sectors.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Secteur d&apos;activité</label>
+              <select value={form.sector} onChange={e => updateField('sector', e.target.value)} className="input-field" required>
+                <option value="">Choisir un secteur...</option>
+                {sectorGroups.map(g => (
+                  <optgroup key={g.group} label={g.group}>
+                    {g.options.map(o => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                RCCM <span className="text-gray-400 font-normal">(optionnel)</span>
+              </label>
+              <input type="text" value={form.rccm} onChange={e => updateField('rccm', e.target.value)}
+                className="input-field" placeholder="GA-LBV-RCCM-2024-B-00123" maxLength={50} />
             </div>
 
             {/* Logo upload */}
@@ -204,7 +260,7 @@ export default function RegisterPage() {
                 >
                   <Upload className="w-6 h-6" />
                   <span className="text-sm font-medium">Cliquer pour uploader le logo</span>
-                  <span className="text-xs">PNG, JPG, WebP, SVG — max 2 Mo</span>
+                  <span className="text-xs text-center px-4 text-gray-500">PNG, JPG, WebP, SVG — max 2 Mo<br/><span className="text-gray-400 font-normal">(Recommandé : 500x500 px, fond transparent)</span></span>
                 </button>
               )}
 

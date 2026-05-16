@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { query } from '@/lib/db'
+import { query, withTransaction } from '@/lib/db'
 import { hashPassword, createToken } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
@@ -17,17 +17,20 @@ export async function POST(request: NextRequest) {
 
     const hashedPassword = await hashPassword(password)
 
-    const companyResult = await query(
-      'INSERT INTO companies (name, rccm, sector) VALUES ($1, $2, $3) RETURNING id',
-      [companyName, rccm || null, sector || null]
-    )
-    const companyId = companyResult.rows[0].id
+    // Company + user created atomically — if user insert fails, company is rolled back
+    const { userId, companyId } = await withTransaction(async (client) => {
+      const companyResult = await client.query(
+        'INSERT INTO companies (name, rccm, sector) VALUES ($1, $2, $3) RETURNING id',
+        [companyName, rccm || null, sector || null]
+      )
+      const companyId = companyResult.rows[0].id
 
-    const userResult = await query(
-      'INSERT INTO users (email, password_hash, first_name, last_name, phone, company_id, role) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
-      [email, hashedPassword, firstName, lastName, phone, companyId, 'admin']
-    )
-    const userId = userResult.rows[0].id
+      const userResult = await client.query(
+        'INSERT INTO users (email, password_hash, first_name, last_name, phone, company_id, role) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
+        [email, hashedPassword, firstName, lastName, phone, companyId, 'user']
+      )
+      return { userId: userResult.rows[0].id, companyId }
+    })
 
     const token = await createToken({ userId, email, companyId, role: 'user' })
 
@@ -43,9 +46,7 @@ export async function POST(request: NextRequest) {
     return response
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? error.message : String(error)
-    const errStack = error instanceof Error ? error.stack : ''
-    console.error('Registration error:', errMsg, errStack)
-    console.error('Registration error detail:', errMsg, errStack)
+    console.error('Registration error:', errMsg)
     return NextResponse.json({ error: "Erreur lors de l'inscription. Veuillez réessayer." }, { status: 500 })
   }
 }

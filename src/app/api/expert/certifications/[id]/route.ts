@@ -1,20 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { query } from '@/lib/db'
+import { notifyAllAdmins, notifyCompanyUsers } from '@/lib/notifications'
 
-async function ensureColumns() {
-  await query(`ALTER TABLE certification_requests ADD COLUMN IF NOT EXISTS expert_user_id INTEGER REFERENCES users(id)`, [])
-  await query(`ALTER TABLE certification_requests ADD COLUMN IF NOT EXISTS inspection_checklist TEXT`, [])
-}
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const session = await getSession()
+    const session = await getSession('expert')
     if (!session || session.role !== 'expert') {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+      return NextResponse.json({ error: 'AccÃ¨s refusÃ©' }, { status: 403 })
     }
-
-    await ensureColumns()
 
     const certId = parseInt(params.id)
     const result = await query(
@@ -23,6 +19,9 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
          cr.inspection_notes, cr.inspection_checklist, cr.certified_at, cr.certificate_number,
          cr.rejection_reason, cr.admin_notes, cr.inspection_date,
          cr.company_message,
+         cr.audit_checklist, cr.audit_scheduled_date, cr.audit_location,
+         cr.inspection_confirmed, cr.inspection_proposed_date, cr.inspection_proposed_by,
+         cr.expert_report_pdf_url,
          a.id as assessment_id, a.name as assessment_name, a.year as assessment_year,
          a.total_co2eq, a.scope1_co2eq, a.scope2_co2eq, a.scope3_co2eq,
          a.approach,
@@ -37,7 +36,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     )
 
     if (result.rows.length === 0) {
-      return NextResponse.json({ error: 'Certification introuvable ou non assignée' }, { status: 404 })
+      return NextResponse.json({ error: 'Certification introuvable ou non assignÃ©e' }, { status: 404 })
     }
 
     const r = result.rows[0]
@@ -70,8 +69,32 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       sourceCharacterization: e.source_characterization,
     }))
 
+    // Supporting documents uploaded by company per emission entry
+    const auditDocsResult = await query(
+      `SELECT ad.id, ad.emission_factor_id, ad.original_name, ad.filename,
+              ad.file_size, ad.mime_type, ad.created_at,
+              ee.factor_name, ee.category, ee.scope
+       FROM audit_documents ad
+       LEFT JOIN emission_entries ee ON ee.assessment_id = ad.assessment_id
+         AND ee.emission_factor_id = ad.emission_factor_id
+       WHERE ad.assessment_id = $1
+       ORDER BY ee.scope, ee.category, ad.created_at DESC`,
+      [r.assessment_id]
+    )
+    const auditDocuments = auditDocsResult.rows.map(d => ({
+      id:          d.id,
+      factorId:    d.emission_factor_id,
+      factorName:  d.factor_name  ?? null,
+      category:    d.category     ?? null,
+      scope:       d.scope        ? parseInt(d.scope) : null,
+      originalName: d.original_name,
+      fileSize:    d.file_size,
+      mimeType:    d.mime_type,
+      createdAt:   d.created_at,
+    }))
+
     // Monthly breakdown
-    const MONTH_LABELS = ['', 'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+    const MONTH_LABELS = ['', 'Jan', 'Fev', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aou', 'Sep', 'Oct', 'Nov', 'Dec']
     const byMonth = Array.from({ length: 12 }, (_, i) => {
       const m = i + 1
       const mes = entries.filter(e => e.month === m)
@@ -110,7 +133,14 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       updatedAt: r.updated_at,
       inspectionDate: r.inspection_date,
       inspectionNotes: r.inspection_notes,
-      inspectionChecklist: r.inspection_checklist ? JSON.parse(r.inspection_checklist) : null,
+      inspectionChecklist: (() => { try { return r.inspection_checklist ? JSON.parse(r.inspection_checklist) : null } catch { return null } })(),
+      auditChecklist: r.audit_checklist ?? null,
+      auditScheduledDate: r.audit_scheduled_date,
+      auditLocation: r.audit_location,
+      inspectionConfirmed: r.inspection_confirmed ?? false,
+      inspectionProposedDate: r.inspection_proposed_date,
+      inspectionProposedBy: r.inspection_proposed_by,
+      expertReportPdfUrl: r.expert_report_pdf_url,
       certifiedAt: r.certified_at,
       certificateNumber: r.certificate_number,
       rejectionReason: r.rejection_reason,
@@ -135,6 +165,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       byMonth,
       byCategory,
       topEmitters,
+      auditDocuments,
     })
   } catch (error) {
     console.error('Expert cert detail error:', error)
@@ -144,9 +175,9 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const session = await getSession()
+    const session = await getSession('expert')
     if (!session || session.role !== 'expert') {
-      return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
+      return NextResponse.json({ error: 'AccÃ¨s refusÃ©' }, { status: 403 })
     }
 
     const certId = parseInt(params.id)
@@ -154,11 +185,14 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const { action } = body
 
     const owned = await query(
-      `SELECT id, status FROM certification_requests WHERE id = $1 AND expert_user_id = $2`,
+      `SELECT cr.id, cr.status, cr.company_id, a.name as assessment_name
+       FROM certification_requests cr
+       JOIN assessments a ON a.id = cr.assessment_id
+       WHERE cr.id = $1 AND cr.expert_user_id = $2`,
       [certId, session.userId]
     )
     if (owned.rows.length === 0) {
-      return NextResponse.json({ error: 'Certification introuvable ou non assignée' }, { status: 404 })
+      return NextResponse.json({ error: 'Certification introuvable ou non assignÃ©e' }, { status: 404 })
     }
     const cert = owned.rows[0]
 
@@ -169,9 +203,48 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         [inspectionDate || null, certId]
       )
 
+    } else if (action === 'confirm_date') {
+      // Expert confirms the admin-scheduled date
+      await query(
+        `UPDATE certification_requests
+         SET inspection_confirmed = TRUE,
+             inspection_date = COALESCE(inspection_date, audit_scheduled_date),
+             inspection_proposed_date = NULL,
+             inspection_proposed_by = NULL,
+             updated_at = NOW()
+         WHERE id = $1`,
+        [certId]
+      )
+      await notifyAllAdmins(
+        'cert_comment',
+        'Date d\'inspection confirmée',
+        `L'expert a confirmé la date d'inspection pour "${cert.assessment_name}".`,
+        `/admin/certifications/${certId}`
+      )
+
+    } else if (action === 'propose_date') {
+      // Expert proposes a different date
+      const { proposedDate, reason } = body
+      if (!proposedDate) return NextResponse.json({ error: 'Date requise' }, { status: 400 })
+      await query(
+        `UPDATE certification_requests
+         SET inspection_confirmed = FALSE,
+             inspection_proposed_date = $1,
+             inspection_proposed_by = 'expert',
+             updated_at = NOW()
+         WHERE id = $2`,
+        [proposedDate, certId]
+      )
+      await notifyAllAdmins(
+        'cert_comment',
+        'Proposition de nouvelle date d\'inspection',
+        `L'expert propose le ${new Date(proposedDate).toLocaleDateString('fr-FR')} pour "${cert.assessment_name}"${reason ? ` : ${reason}` : ''}.`,
+        `/admin/certifications/${certId}`
+      )
+
     } else if (action === 'start_review') {
       if (cert.status !== 'assigned') {
-        return NextResponse.json({ error: 'Ce bilan n\'est pas dans l\'état "assigné"' }, { status: 400 })
+        return NextResponse.json({ error: 'Ce bilan n\'est pas dans l\'Ã©tat "assignÃ©"' }, { status: 400 })
       }
       await query(`UPDATE certification_requests SET status = 'in_progress', updated_at = NOW() WHERE id = $1`, [certId])
 
@@ -184,12 +257,42 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     } else if (action === 'checklist') {
       const { checklist } = body
+      // Save to JSONB column audit_checklist (6-section structure)
       await query(
-        `UPDATE certification_requests SET inspection_checklist = $1, updated_at = NOW() WHERE id = $2`,
+        `UPDATE certification_requests SET audit_checklist = $1, updated_at = NOW() WHERE id = $2`,
         [JSON.stringify(checklist), certId]
       )
 
+    } else if (action === 'audit_done') {
+      // Expert finalizes the audit â€” transitions to audit_done for admin review
+      if (!['assigned', 'in_progress'].includes(cert.status)) {
+        return NextResponse.json({ error: 'Statut invalide pour finaliser l\'audit' }, { status: 400 })
+      }
+      const { auditChecklist, inspectionNotes } = body
+      await query(
+        `UPDATE certification_requests
+         SET status = 'audit_done',
+             audit_checklist = $1,
+             inspection_notes = $2,
+             inspection_date = COALESCE(inspection_date, NOW()::DATE),
+             updated_at = NOW()
+         WHERE id = $3`,
+        [
+          auditChecklist ? JSON.stringify(auditChecklist) : null,
+          inspectionNotes || null,
+          certId,
+        ]
+      )
+      // Notify admins that audit is ready for review
+      await notifyAllAdmins(
+        'cert_comment',
+        'Audit terminé — en attente de validation',
+        `L'expert a finalisé l'audit pour "${cert.assessment_name}". En attente de votre validation.`,
+        `/admin/certifications/${certId}`
+      )
+
     } else if (action === 'certify') {
+      // Legacy direct-certify (kept for backward compatibility)
       if (!['in_progress', 'assigned'].includes(cert.status)) {
         return NextResponse.json({ error: 'Statut invalide pour certifier' }, { status: 400 })
       }
@@ -213,6 +316,13 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       await query(
         `UPDATE certification_requests SET status = 'rejected', rejection_reason = $1, updated_at = NOW() WHERE id = $2`,
         [rejectionReason.trim(), certId]
+      )
+      await notifyCompanyUsers(
+        cert.company_id,
+        'cert_rejected',
+        'Demande de certification refusée',
+        `L'expert a refusé la certification de "${cert.assessment_name}".`,
+        `/dashboard/certifications`
       )
 
     } else {

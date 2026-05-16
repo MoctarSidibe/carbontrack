@@ -57,3 +57,6 @@ next-env.d.ts
 
 # green_leaves (CVs / unrelated documents)
 /green_leaves/
+
+# External methodology reference PDFs (Verra, etc.)
+/verra methodology/

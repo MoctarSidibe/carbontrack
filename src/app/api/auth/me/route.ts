@@ -1,16 +1,23 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { query } from '@/lib/db'
 
-export async function GET() {
+export const dynamic = 'force-dynamic'
+
+export async function GET(request: NextRequest) {
   try {
-    const session = await getSession()
+    const portal = (request.nextUrl.searchParams.get('portal') ?? 'user') as 'admin' | 'expert' | 'user'
+    const session = await getSession(portal)
     if (!session) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
     }
 
     const userResult = await query(
-      'SELECT u.id, u.email, u.first_name, u.last_name, u.phone, u.role, c.id as company_id, c.name as company_name, c.rccm, c.sector, c.logo_url FROM users u JOIN companies c ON u.company_id = c.id WHERE u.id = $1',
+      `SELECT u.id, u.email, u.first_name, u.last_name, u.phone, u.role,
+              c.id as company_id, c.name as company_name, c.rccm, c.sector, c.logo_url
+       FROM users u
+       LEFT JOIN companies c ON u.company_id = c.id
+       WHERE u.id = $1`,
       [session.userId]
     )
 
@@ -20,14 +27,17 @@ export async function GET() {
 
     const user = userResult.rows[0]
 
-    // Check active subscription
-    const subResult = await query(
-      `SELECT id, plan, status, expires_at, payment_method FROM subscriptions 
-       WHERE company_id = $1 AND status = 'active' AND expires_at > NOW() 
-       ORDER BY expires_at DESC LIMIT 1`,
-      [user.company_id]
-    )
-    const subscription = subResult.rows.length > 0 ? subResult.rows[0] : null
+    // Only fetch subscription for company users (admins/experts have no subscription)
+    let subscription = null
+    if (user.company_id) {
+      const subResult = await query(
+        `SELECT id, plan, status, expires_at, payment_method FROM subscriptions
+         WHERE company_id = $1 AND status = 'active' AND expires_at > NOW()
+         ORDER BY expires_at DESC LIMIT 1`,
+        [user.company_id]
+      )
+      subscription = subResult.rows.length > 0 ? subResult.rows[0] : null
+    }
 
     return NextResponse.json({
       id: user.id,
@@ -36,13 +46,13 @@ export async function GET() {
       lastName: user.last_name,
       phone: user.phone,
       role: user.role,
-      company: {
+      company: user.company_id ? {
         id: user.company_id,
         name: user.company_name,
         rccm: user.rccm,
         sector: user.sector,
         logoUrl: user.logo_url || null,
-      },
+      } : null,
       subscription: subscription ? {
         id: subscription.id,
         plan: subscription.plan,
