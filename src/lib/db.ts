@@ -5,19 +5,37 @@ declare global {
   var _pgPool: Pool | undefined
 }
 
-const pool = global._pgPool ?? new Pool({
-  host: process.env.PGHOST || '127.0.0.1',
-  port: parseInt(process.env.PGPORT || '5432'),
-  user: process.env.PGUSER || 'postgres',
-  password: process.env.PGPASSWORD || 'postgres',
-  database: process.env.PGDATABASE || 'carbontrack',
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  max: 5,
-  idleTimeoutMillis: 10000,
-  connectionTimeoutMillis: 10000,
-  keepAlive: true,
-  keepAliveInitialDelayMillis: 10000,
-})
+// Prefer DATABASE_URL (12-factor convention, used by hosted PG providers).
+// Fall back to individual PG* vars or sensible local defaults for dev.
+// SSL is OFF by default — enable explicitly with PGSSLMODE=require when needed
+// (e.g. Neon, Supabase, Heroku). Local PG installs don't speak SSL by default.
+const sslMode = (process.env.PGSSLMODE || '').toLowerCase()
+const sslEnabled = sslMode === 'require' || sslMode === 'no-verify'
+const sslConfig = sslEnabled ? { rejectUnauthorized: sslMode === 'require' } : false
+
+const pool = global._pgPool ?? (process.env.DATABASE_URL
+  ? new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: sslConfig,
+      max: 5,
+      idleTimeoutMillis: 10000,
+      connectionTimeoutMillis: 10000,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10000,
+    })
+  : new Pool({
+      host: process.env.PGHOST || '127.0.0.1',
+      port: parseInt(process.env.PGPORT || '5432'),
+      user: process.env.PGUSER || 'postgres',
+      password: process.env.PGPASSWORD || 'postgres',
+      database: process.env.PGDATABASE || 'carbontrack',
+      ssl: sslConfig,
+      max: 5,
+      idleTimeoutMillis: 10000,
+      connectionTimeoutMillis: 10000,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10000,
+    }))
 
 if (process.env.NODE_ENV !== 'production') global._pgPool = pool
 

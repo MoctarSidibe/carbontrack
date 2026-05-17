@@ -159,25 +159,28 @@ CREATE TABLE IF NOT EXISTS buffer_pool_ledger (
 -- 5. Registry summary view (materialized manually — update after each issuance)
 -- ─────────────────────────────────────────────────────────────────────────────
 
--- This is a helper view, not materialized, for the admin dashboard
+-- This is a helper view, not materialized, for the admin dashboard.
+-- Uses only columns that actually exist on carbon_projects (created by
+-- migrate-add-market.sql) — `standard`, `project_type_mrv`, `methodology_code`
+-- live on the methodologies/carbon_credits tables, not on carbon_projects.
 CREATE OR REPLACE VIEW registry_summary AS
 SELECT
-  cp.id                      AS project_id,
-  cp.title                   AS project_title,
-  cp.project_type_mrv,
-  cp.methodology_code,
-  cp.standard,
-  p.name                     AS partner_name,
-  COUNT(cc.id)               AS credit_batches,
+  cp.id                                 AS project_id,
+  cp.title                              AS project_title,
+  cp.project_type                       AS project_type,
+  p.name                                AS partner_name,
+  MAX(cc.methodology_code)              AS methodology_code,
+  MAX(cc.standard)                      AS standard,
+  COUNT(cc.id)                          AS credit_batches,
   COALESCE(SUM(cc.quantity_issued),   0) AS total_issued,
   COALESCE(SUM(cc.quantity_active),   0) AS total_active,
   COALESCE(SUM(cc.quantity_retired),  0) AS total_retired,
   COALESCE(SUM(cc.quantity_cancelled),0) AS total_cancelled,
   COALESCE(SUM(cc.quantity_buffer),   0) AS total_buffer,
-  MIN(cc.vintage_year)   AS first_vintage,
-  MAX(cc.vintage_year)   AS last_vintage,
-  MAX(cc.issuance_date)  AS last_issuance
+  MIN(cc.vintage_year)                  AS first_vintage,
+  MAX(cc.vintage_year)                  AS last_vintage,
+  MAX(cc.issuance_date)                 AS last_issuance
 FROM carbon_projects cp
-LEFT JOIN partners p ON p.id = cp.partner_id
+LEFT JOIN partners p       ON p.id = cp.partner_id
 LEFT JOIN carbon_credits cc ON cc.project_id = cp.id
-GROUP BY cp.id, cp.title, cp.project_type_mrv, cp.methodology_code, cp.standard, p.name;
+GROUP BY cp.id, cp.title, cp.project_type, p.name;

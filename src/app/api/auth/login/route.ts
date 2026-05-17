@@ -56,7 +56,10 @@ export async function POST(request: NextRequest) {
 
     const cookieOpts = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      // Opt-in via env so we can serve over HTTP (no DNS/TLS yet) without
+      // browsers silently dropping the cookie. Set COOKIE_SECURE=true once
+      // HTTPS is in place (Certbot etc.).
+      secure: process.env.COOKIE_SECURE === 'true',
       sameSite: 'lax' as const,
       path: '/',
     }

@@ -37,7 +37,8 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({ success: true, userId, companyId })
     response.cookies.set('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      // Opt-in via env so HTTP-only deploys don't get cookies dropped by browser
+      secure: process.env.COOKIE_SECURE === 'true',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
       path: '/',

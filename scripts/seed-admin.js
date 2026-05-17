@@ -6,13 +6,17 @@
 const { Pool } = require('pg')
 const bcrypt = require('bcryptjs')
 
-const pool = new Pool({
-  host: 'localhost',
-  port: 5432,
-  user: 'postgres',
-  password: 'elitebook',
-  database: 'carbontrack',
-})
+// Prefer DATABASE_URL (production); fall back to localhost defaults for dev convenience.
+// In production, load env first:  set -a && source .env.local && set +a && node scripts/seed-admin.js
+const pool = process.env.DATABASE_URL
+  ? new Pool({ connectionString: process.env.DATABASE_URL })
+  : new Pool({
+      host:     process.env.PGHOST     || 'localhost',
+      port:     parseInt(process.env.PGPORT) || 5432,
+      user:     process.env.PGUSER     || 'postgres',
+      password: process.env.PGPASSWORD || 'elitebook',
+      database: process.env.PGDATABASE || 'carbontrack',
+    })
 
 async function seedAdmin() {
   const client = await pool.connect()

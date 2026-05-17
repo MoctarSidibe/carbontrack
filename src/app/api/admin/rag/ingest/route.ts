@@ -83,10 +83,12 @@ export async function GET(req: NextRequest) {
   // Check force flag to re-ingest already-processed documents
   const force = req.nextUrl.searchParams.get('force') === 'true'
 
-  // Dynamic import of pdf-parse (CommonJS module)
+  // Dynamic import of pdf-parse (CommonJS module — typings don't expose .default)
   let pdfParse: (buffer: Buffer) => Promise<{ text: string; numpages: number }>
   try {
-    const mod = await import('pdf-parse')
+    const mod = (await import('pdf-parse')) as unknown as {
+      default?: (buffer: Buffer) => Promise<{ text: string; numpages: number }>
+    } & ((buffer: Buffer) => Promise<{ text: string; numpages: number }>)
     pdfParse = mod.default ?? mod
   } catch {
     return NextResponse.json({
