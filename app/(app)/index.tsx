@@ -1,11 +1,12 @@
 import { useCallback, useState } from 'react';
 import {
-  View, Text, ScrollView, RefreshControl, TouchableOpacity,
+  View, Text, ScrollView, RefreshControl, TouchableOpacity, Image
 } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { apiFetch } from '@/lib/api';
 import { removeToken } from '@/lib/auth';
+import { API_URL } from '@/constants/config';
 import type { Assessment, Site, MeResponse, Certification } from '@/lib/types';
 import StatCard from '@/components/StatCard';
 import SectionHeader from '@/components/SectionHeader';
@@ -95,19 +96,33 @@ export default function Dashboard() {
     >
       {/* Greeting */}
       <View className="bg-white rounded-2xl p-4 mb-4 border border-gray-100">
-        <Text className="text-sm text-gray-400 mb-0.5">Bienvenue,</Text>
-        <Text className="text-xl font-extrabold text-gray-900" numberOfLines={1}>
-          {me?.firstName}{me?.lastName ? ` ${me.lastName}` : ''}
-        </Text>
-        <Text className="text-base font-bold text-brand-600 mt-0.5" numberOfLines={2}>
-          {me?.company?.name}
-        </Text>
-        {/* Sector */}
-        <View className="flex-row items-center gap-1.5 mt-1.5">
-          <Ionicons name="business-outline" size={12} color="#9ca3af" />
-          <Text className="text-xs text-gray-400" numberOfLines={1}>
-            {me?.company?.sector ?? 'Entreprise'}
-          </Text>
+        <View className="flex-row justify-between items-start">
+          <View className="flex-1">
+            <Text className="text-sm text-gray-400 mb-0.5">Bienvenue,</Text>
+            <Text className="text-xl font-extrabold text-gray-900" numberOfLines={1}>
+              {me?.firstName}{me?.lastName ? ` ${me.lastName}` : ''}
+            </Text>
+            <Text className="text-base font-bold text-brand-600 mt-0.5" numberOfLines={2}>
+              {me?.company?.name}
+            </Text>
+            {/* Sector */}
+            <View className="flex-row items-center gap-1.5 mt-1.5">
+              <Ionicons name="business-outline" size={12} color="#9ca3af" />
+              <Text className="text-xs text-gray-400" numberOfLines={1}>
+                {me?.company?.sector ?? 'Entreprise'}
+              </Text>
+            </View>
+          </View>
+          
+          {/* Company Logo rendering */}
+          {(me?.company as any)?.logoUrl && (
+            <View className="w-20 h-20 flex items-center justify-center ml-4">
+              <Image
+                source={{ uri: (me?.company as any).logoUrl.startsWith('http') ? (me?.company as any).logoUrl : `${API_URL}${(me?.company as any).logoUrl}` }}
+                style={{ width: '100%', height: '100%', resizeMode: 'contain' }}
+              />
+            </View>
+          )}
         </View>
 
         {/* Subscription pill — clearly tappable */}

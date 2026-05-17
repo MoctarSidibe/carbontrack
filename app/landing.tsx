@@ -21,16 +21,19 @@ const FEATURES = [
   {
     icon: 'ribbon-outline' as const,
     title: 'Certification par experts',
-    desc: 'Dossier audité et certifié par nos experts accrédités CarbonTrack',
+    desc: 'Dossier audité et certifié par les experts GreenLeaves, autorité de certification officielle.',
   },
 ];
 
 const FLAG_COLORS = ['#009e60', '#FCD116', '#3A75C4'];
 
-function FlagStrip({ height = 4 }: { height?: number }) {
+// 3 thin long horizontal bands stacked — Gabon flag colors (green / yellow / blue)
+function FlagStrip({ bandHeight = 3 }: { bandHeight?: number }) {
   return (
-    <View style={{ flexDirection: 'row', height }}>
-      {FLAG_COLORS.map(c => <View key={c} style={{ flex: 1, backgroundColor: c }} />)}
+    <View>
+      {FLAG_COLORS.map(c => (
+        <View key={c} style={{ height: bandHeight, backgroundColor: c }} />
+      ))}
     </View>
   );
 }
@@ -87,9 +90,9 @@ export default function LandingScreen() {
     <View style={{ flex: 1, backgroundColor: '#1a6b3a' }}>
       <StatusBar barStyle="light-content" backgroundColor="#1a6b3a" />
 
-      {/* ── Gabon flag strip — TOP ── */}
+      {/* ── Gabon flag strip — TOP (3 thin long horizontal bands: green · yellow · blue) ── */}
       <View style={{ position: 'absolute', top: insets.top, left: 0, right: 0, zIndex: 10 }}>
-        <FlagStrip height={4} />
+        <FlagStrip bandHeight={3} />
       </View>
 
 

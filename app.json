@@ -24,7 +24,8 @@
         "backgroundColor": "#0f172a"
       },
       "package": "com.carbontrack.mobile",
-      "versionCode": 1
+      "versionCode": 1,
+      "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
       "bundler": "metro",
@@ -45,6 +46,9 @@
       "typedRoutes": true
     },
     "scheme": "carbontrack",
+    "updates": {
+      "enabled": false
+    },
     "extra": {
       "eas": {
         "projectId": "REMPLACER_PAR_VOTRE_EAS_PROJECT_ID"

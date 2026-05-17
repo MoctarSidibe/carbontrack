@@ -11,13 +11,23 @@ import EmptyState from '@/components/EmptyState';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 const SITE_TYPE_LABELS: Record<string, string> = {
-  bureau: 'Bureau',
-  entrepot: 'Entrepôt',
-  usine: 'Usine',
+  agence: 'Agence / Succursale',
+  boutique: 'Boutique / Point de Vente',
+  bureau: 'Bureau / Siège Social',
+  chantier: 'Chantier / Construction',
+  clinique: 'Clinique / Centre Médical',
+  datacenter: 'Data Center / Informatique',
+  ecole: 'École / Campus',
+  entrepot: 'Entrepôt / Stockage',
+  exploitation_agricole: 'Exploitation Agricole',
+  garage: 'Garage / Atelier',
+  hotel: 'Hôtel / Hébergement',
+  laboratoire: 'Laboratoire / R&D',
+  logistique: 'Plateforme Logistique',
   magasin: 'Magasin',
-  chantier: 'Chantier',
-  datacenter: 'Data Center',
-  laboratoire: 'Laboratoire',
+  restaurant: 'Restaurant / Restauration',
+  supermarche: 'Supermarché / Hypermarché',
+  usine: 'Usine / Production',
   autre: 'Autre',
 };
 
@@ -62,8 +72,10 @@ export default function SitesScreen() {
             <View className="flex-row items-start justify-between">
               <View className="flex-1 mr-3">
                 <Text className="font-semibold text-gray-900">{s.name}</Text>
-                {s.address ? (
-                  <Text className="text-xs text-gray-500 mt-0.5" numberOfLines={1}>{s.address}</Text>
+                {[s.address, s.country].filter(Boolean).length > 0 ? (
+                  <Text className="text-xs text-gray-500 mt-0.5" numberOfLines={1}>
+                    {[s.address, s.country].filter(Boolean).join(' · ')}
+                  </Text>
                 ) : null}
                 <View className="flex-row gap-2 mt-2">
                   <Badge label={SITE_TYPE_LABELS[s.type] ?? s.type} variant="blue" />

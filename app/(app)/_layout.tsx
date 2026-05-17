@@ -1,14 +1,18 @@
-import { useRef, useEffect } from 'react';
-import { Tabs, useRouter } from 'expo-router';
+import { useRef, useEffect, useState, useCallback } from 'react';
+import { Tabs, useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text, TouchableOpacity, Platform, Animated, Easing } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, Animated, Easing, AppState } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { removeToken } from '@/lib/auth';
 import { apiFetch } from '@/lib/api';
+import type { NotificationsResponse } from '@/lib/types';
+import BotIcon from '@/components/BotIcon';
 
 function AppHeader({ title }: { title: string }) {
   const router = useRouter();
+  const pathname = usePathname();
   const insets = useSafeAreaInsets();
+  const [unread, setUnread] = useState(0);
 
   const pulse1 = useRef(new Animated.Value(0)).current;
   const pulse2 = useRef(new Animated.Value(0)).current;
@@ -28,6 +32,24 @@ function AppHeader({ title }: { title: string }) {
       );
     Animated.parallel([makePulse(pulse1, 0), makePulse(pulse2, 1200)]).start();
   }, []);
+
+  // Poll unread count: on focus change, on app foreground, and every 60s while open
+  const refreshUnread = useCallback(async () => {
+    try {
+      const data = await apiFetch<NotificationsResponse>('/api/notifications');
+      setUnread(data.unread ?? 0);
+    } catch { /* swallow — header should never crash on this */ }
+  }, []);
+
+  useEffect(() => {
+    refreshUnread();
+    const interval = setInterval(refreshUnread, 60_000);
+    const sub = AppState.addEventListener('change', s => { if (s === 'active') refreshUnread(); });
+    return () => { clearInterval(interval); sub.remove(); };
+  }, [refreshUnread]);
+
+  // Re-poll when route changes (so the badge clears after opening the screen)
+  useEffect(() => { refreshUnread(); }, [pathname, refreshUnread]);
 
   const handleLogout = async () => {
     await apiFetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
@@ -84,8 +106,29 @@ function AppHeader({ title }: { title: string }) {
           {title}
         </Text>
 
-        {/* Brand name + logout */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        {/* Notification bell + brand + logout */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <TouchableOpacity
+            onPress={() => router.push('/(app)/notifications')}
+            style={{ padding: 6, position: 'relative' }}
+          >
+            <Ionicons name="notifications-outline" size={22} color={unread > 0 ? '#22c55e' : '#6b7280'} />
+            {unread > 0 && (
+              <View style={{
+                position: 'absolute', top: 2, right: 2,
+                minWidth: 16, height: 16, borderRadius: 8,
+                backgroundColor: '#ef4444',
+                alignItems: 'center', justifyContent: 'center',
+                paddingHorizontal: 4,
+                borderWidth: 1.5, borderColor: '#fff',
+              }}>
+                <Text style={{ color: '#fff', fontSize: 9, fontWeight: '800', lineHeight: 11 }}>
+                  {unread > 9 ? '9+' : unread}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <View style={{ width: 1, height: 16, backgroundColor: '#e5e7eb' }} />
           <Text style={{ fontSize: 11, fontWeight: '800', color: '#22c55e', letterSpacing: 0.3 }}>
             CarbonTrack
           </Text>
@@ -115,11 +158,12 @@ type TabItem = {
 };
 
 const TABS: TabItem[] = [
-  { name: 'index',                icon: 'home-outline',          iconFocused: 'home',          title: 'Accueil',        label: 'Accueil'  },
-  { name: 'sites/index',          icon: 'business-outline',      iconFocused: 'business',      title: 'Sites',          label: 'Sites'    },
-  { name: 'assessments/index',    icon: 'bar-chart-outline',     iconFocused: 'bar-chart',     title: 'Bilans',         label: 'Bilans'   },
-  { name: 'reports/index',        icon: 'document-text-outline', iconFocused: 'document-text', title: 'Rapports',       label: 'Rapports' },
-  { name: 'certifications/index', icon: 'ribbon-outline',        iconFocused: 'ribbon',        title: 'Certifications', label: 'Certifs'  },
+  { name: 'index',                icon: 'home-outline',          iconFocused: 'home',          title: 'Accueil',        label: 'Accueil'      },
+  { name: 'sites/index',          icon: 'business-outline',      iconFocused: 'business',      title: 'Sites',          label: 'Sites'        },
+  { name: 'assessments/index',    icon: 'bar-chart-outline',     iconFocused: 'bar-chart',     title: 'Bilans',         label: 'Bilans'       },
+  { name: 'reports/index',        icon: 'document-text-outline', iconFocused: 'document-text', title: 'Rapports',       label: 'Rapports'     },
+  { name: 'assistant/index',      icon: 'sparkles-outline',      iconFocused: 'sparkles',      title: 'Assistant IA',   label: 'Assistant IA' },
+  // Market is frozen for now (matches web — page exists but no nav link)
 ];
 
 function TabIcon({ name, focused, color }: { name: keyof typeof Ionicons.glyphMap; focused: boolean; color: string }) {
@@ -127,6 +171,15 @@ function TabIcon({ name, focused, color }: { name: keyof typeof Ionicons.glyphMa
     <View style={{ alignItems: 'center', width: 40 }}>
       <View style={{ width: 20, height: 3, borderRadius: 2, backgroundColor: focused ? '#22c55e' : 'transparent', marginBottom: 4 }} />
       <Ionicons name={name} size={focused ? 23 : 21} color={color} />
+    </View>
+  );
+}
+
+function BotTabIcon({ focused, color }: { focused: boolean; color: string }) {
+  return (
+    <View style={{ alignItems: 'center', width: 40 }}>
+      <View style={{ width: 20, height: 3, borderRadius: 2, backgroundColor: focused ? '#22c55e' : 'transparent', marginBottom: 4 }} />
+      <BotIcon size={focused ? 23 : 21} color={color} strokeWidth={focused ? 2.2 : 1.9} />
     </View>
   );
 }
@@ -152,7 +205,7 @@ export default function AppLayout() {
           paddingTop: 0,
           height: 62 + extraBottom,
         },
-        tabBarLabelStyle: { fontSize: 10, fontWeight: '600', marginTop: 1, letterSpacing: 0.1 },
+        tabBarLabelStyle: { fontSize: 9.5, fontWeight: '600', marginTop: 1, letterSpacing: 0 },
         tabBarItemStyle: { paddingTop: 4 },
         header: ({ options }) => <AppHeader title={options.title ?? ''} />,
       }}
@@ -164,9 +217,10 @@ export default function AppLayout() {
           options={{
             title: tab.title,
             tabBarLabel: tab.label,
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon name={focused ? tab.iconFocused : tab.icon} focused={focused} color={color} />
-            ),
+            tabBarIcon: ({ color, focused }) =>
+              tab.name === 'assistant/index'
+                ? <BotTabIcon focused={focused} color={color} />
+                : <TabIcon name={focused ? tab.iconFocused : tab.icon} focused={focused} color={color} />,
           }}
         />
       ))}
@@ -175,6 +229,10 @@ export default function AppLayout() {
       <Tabs.Screen name="assessments/[id]/index"         options={{ href: null, title: 'Détail bilan' }} />
       <Tabs.Screen name="assessments/[id]/emissions"     options={{ href: null, title: 'Saisir les émissions' }} />
       <Tabs.Screen name="subscription/index"             options={{ href: null, title: 'Mon abonnement' }} />
+      <Tabs.Screen name="certifications/index"           options={{ href: null, title: 'Mes certifications' }} />
+      <Tabs.Screen name="notifications/index"            options={{ href: null, title: 'Notifications' }} />
+      {/* Market — frozen, kept as hidden route (page still accessible by direct URL) */}
+      <Tabs.Screen name="market/index"                   options={{ href: null, title: 'Marché Carbone' }} />
     </Tabs>
   );
 }

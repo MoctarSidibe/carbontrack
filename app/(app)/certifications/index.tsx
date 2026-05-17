@@ -1,8 +1,9 @@
 import { useCallback, useState } from 'react';
-import { View, Text, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, RefreshControl, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { apiFetch } from '@/lib/api';
+import { downloadAndShareFile } from '@/lib/download';
 import type { Certification, CertificationStatus } from '@/lib/types';
 import Badge from '@/components/Badge';
 import EmptyState from '@/components/EmptyState';
@@ -21,27 +22,38 @@ function fmtDate(s: string | null) {
 type BadgeVariant = 'gray' | 'yellow' | 'green' | 'red' | 'blue';
 
 const STATUS_INFO: Record<CertificationStatus, { label: string; variant: BadgeVariant; icon: string; desc: string }> = {
-  pending:     { label: 'En attente',      variant: 'gray',   icon: 'time-outline',          desc: 'Demande soumise, en attente d\'assignation.' },
-  assigned:    { label: 'Expert assigné',  variant: 'blue',   icon: 'person-outline',        desc: 'Un expert a été assigné à votre dossier.' },
-  in_progress: { label: 'En vérification', variant: 'yellow', icon: 'search-outline',        desc: 'L\'expert est en cours d\'inspection.' },
-  certified:   { label: 'Certifié',        variant: 'green',  icon: 'checkmark-circle',     desc: 'Le bilan est certifié par l\'expert.' },
-  rejected:    { label: 'Rejeté',          variant: 'red',    icon: 'close-circle-outline',  desc: 'La demande a été rejetée.' },
+  pending:    { label: 'En attente',     variant: 'gray',   icon: 'time-outline',           desc: 'Demande soumise, en attente d\'assignation.' },
+  assigned:   { label: 'Expert assigné', variant: 'blue',   icon: 'person-outline',         desc: 'Un expert GreenLeaves a été assigné à votre dossier.' },
+  in_progress:{ label: 'En vérification',variant: 'yellow', icon: 'search-outline',         desc: 'L\'expert est en cours d\'inspection.' },
+  audit_done: { label: 'Audit finalisé', variant: 'yellow', icon: 'checkmark-done-outline', desc: 'L\'audit est terminé. Revue finale en cours.' },
+  certified:  { label: 'Certifié',      variant: 'green',  icon: 'checkmark-circle',       desc: 'Le bilan carbone est certifié par GreenLeaves.' },
+  rejected:   { label: 'Rejeté',        variant: 'red',    icon: 'close-circle-outline',   desc: 'La demande a été rejetée.' },
 };
 
+const STATUS_STEP: Record<CertificationStatus, number> = {
+  pending:     0,
+  assigned:    1,
+  in_progress: 2,
+  audit_done:  3,
+  certified:   4,
+  rejected:    -1,
+};
+
+const TIMELINE_LABELS = ['Soumis', 'Expert', 'Audit', 'Revue', 'Certifié'];
+
 function Timeline({ status }: { status: CertificationStatus }) {
-  const steps: CertificationStatus[] = ['pending', 'assigned', 'in_progress', 'certified'];
-  const currentIdx = steps.indexOf(status);
+  const currentIdx = STATUS_STEP[status] ?? 0;
   const isRejected = status === 'rejected';
 
   return (
     <View className="flex-row items-center mt-3">
-      {steps.map((step, i) => {
+      {TIMELINE_LABELS.map((_, i) => {
         const done = !isRejected && currentIdx >= i;
         const active = !isRejected && currentIdx === i;
         return (
-          <View key={step} className="flex-row items-center flex-1">
+          <View key={i} className="flex-row items-center flex-1">
             <View className={`w-3 h-3 rounded-full border-2 ${done ? 'bg-brand-500 border-brand-500' : active ? 'border-brand-400' : 'border-gray-300'}`} />
-            {i < steps.length - 1 && (
+            {i < TIMELINE_LABELS.length - 1 && (
               <View className={`flex-1 h-0.5 ${done && currentIdx > i ? 'bg-brand-400' : 'bg-gray-200'}`} />
             )}
           </View>
@@ -56,6 +68,23 @@ export default function CertificationsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
+
+  const handleDownloadPdf = async (cert: Certification) => {
+    setDownloadingId(cert.id);
+    try {
+      await downloadAndShareFile({
+        path: `/api/admin/certifications/${cert.id}/generate-pdf`,
+        method: 'POST',
+        filename: `rapport-audit-${cert.id}.pdf`,
+        dialogTitle: `Rapport d'audit — ${cert.assessmentName}`,
+      });
+    } catch (err: any) {
+      Alert.alert('Erreur', err?.message ?? 'Impossible de télécharger le rapport.');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const load = useCallback(async () => {
     try {
@@ -181,12 +210,87 @@ export default function CertificationsScreen() {
                   </View>
                 )}
 
-                {c.inspectionDate && (c.status === 'assigned' || c.status === 'in_progress') && (
-                  <View className="flex-row items-center gap-1.5 mb-1.5">
-                    <Ionicons name="calendar-outline" size={13} color="#9ca3af" />
-                    <Text className="text-xs text-gray-500">
-                      Inspection prévue : <Text className="font-medium text-gray-700">{fmtDate(c.inspectionDate)}</Text>
+                {/* Inspection scheduling block — shows audit_scheduled_date, location, confirmation state */}
+                {(c.auditScheduledDate || c.inspectionDate || c.inspectionProposedDate) && (
+                  <View className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-3">
+                    <View className="flex-row items-center gap-1.5 mb-1.5">
+                      <Ionicons name="calendar-outline" size={14} color="#2563eb" />
+                      <Text className="text-xs font-bold text-blue-700">Planification de l'inspection</Text>
+                      {c.inspectionConfirmed && (
+                        <View className="flex-row items-center gap-1 bg-green-100 px-1.5 py-0.5 rounded-full ml-auto">
+                          <Ionicons name="checkmark-circle" size={11} color="#16a34a" />
+                          <Text className="text-xs font-medium text-green-700">Confirmée</Text>
+                        </View>
+                      )}
+                      {!c.inspectionConfirmed && c.inspectionProposedDate && (
+                        <View className="flex-row items-center gap-1 bg-amber-100 px-1.5 py-0.5 rounded-full ml-auto">
+                          <Ionicons name="refresh-outline" size={11} color="#b45309" />
+                          <Text className="text-xs font-medium text-amber-700">Proposée</Text>
+                        </View>
+                      )}
+                    </View>
+                    {(c.auditScheduledDate || c.inspectionDate) && (
+                      <Text className="text-xs text-gray-700 mb-0.5">
+                        Date prévue : <Text className="font-medium">{fmtDate(c.auditScheduledDate ?? c.inspectionDate)}</Text>
+                      </Text>
+                    )}
+                    {c.auditLocation && (
+                      <Text className="text-xs text-gray-600">
+                        Lieu : <Text className="font-medium">{c.auditLocation}</Text>
+                      </Text>
+                    )}
+                    {c.inspectionProposedDate && !c.inspectionConfirmed && (
+                      <Text className="text-xs text-amber-700 mt-1">
+                        {c.inspectionProposedBy === 'expert' ? "L'expert propose : " : "L'admin propose : "}
+                        <Text className="font-medium">{fmtDate(c.inspectionProposedDate)}</Text>
+                      </Text>
+                    )}
+                  </View>
+                )}
+
+                {/* Expert Report PDF — available after audit_done or certified */}
+                {(c.status === 'audit_done' || c.status === 'certified') && (
+                  <TouchableOpacity
+                    onPress={() => handleDownloadPdf(c)}
+                    disabled={downloadingId === c.id}
+                    className={`flex-row items-center justify-center gap-2 bg-brand-600 rounded-xl py-2.5 mb-3 ${
+                      downloadingId === c.id ? 'opacity-60' : ''
+                    }`}
+                    activeOpacity={0.85}
+                  >
+                    {downloadingId === c.id ? (
+                      <ActivityIndicator color="#ffffff" size="small" />
+                    ) : (
+                      <Ionicons name="document-text-outline" size={16} color="#ffffff" />
+                    )}
+                    <Text className="text-sm font-semibold text-white">
+                      {downloadingId === c.id ? 'Téléchargement…' : "Télécharger le rapport d'audit"}
                     </Text>
+                  </TouchableOpacity>
+                )}
+
+                {/* Justificatifs joints à la demande */}
+                {c.documents && c.documents.length > 0 && (
+                  <View className="mb-3">
+                    <Text className="text-xs font-semibold text-gray-700 mb-2 flex-row items-center">
+                      Justificatifs ({c.documents.length})
+                    </Text>
+                    {c.documents.map(d => (
+                      <View
+                        key={d.id}
+                        className="flex-row items-center gap-2 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 mb-1.5"
+                      >
+                        <Ionicons name="document-attach-outline" size={14} color="#6b7280" />
+                        <View className="flex-1 min-w-0">
+                          <Text className="text-xs font-medium text-gray-800" numberOfLines={1}>
+                            {d.originalName}
+                          </Text>
+                          <Text className="text-xs text-gray-400">
+                            {d.docType} · {(d.fileSize / 1024).toFixed(0)} Ko
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
                   </View>
                 )}
 

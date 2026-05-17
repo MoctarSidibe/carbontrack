@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, RefreshControl, TouchableOpacity, Alert,
-  Modal, TextInput, KeyboardAvoidingView, Platform, Image,
+  Modal, TextInput, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiFetch } from '@/lib/api';
@@ -38,21 +38,10 @@ function planLabel(plan: string) {
 }
 
 const PAYMENT_METHODS = [
-  {
-    id: 'Airtel Money', label: 'Airtel Money',
-    logo: require('@/assets/images/airtel-money.png'),
-    logoBg: '#fff5f5', available: true,
-  },
-  {
-    id: 'Moov Money', label: 'Moov Money',
-    logo: require('@/assets/images/moov-money.png'),
-    logoBg: '#fff9f0', available: false,
-  },
-  {
-    id: 'Carte bancaire', label: 'Mastercard / Visa',
-    logo: require('@/assets/images/card-payment.png'),
-    logoBg: '#f5f8ff', available: false,
-  },
+  { id: 'AFG Bank',      label: 'AFG Bank',        icon: 'business-outline',        iconColor: '#1e40af', logoBg: '#eff6ff', available: false },
+  { id: 'Airtel Money',  label: 'Airtel Money',     icon: 'phone-portrait-outline',  iconColor: '#dc2626', logoBg: '#fff5f5', available: true  },
+  { id: 'Moov Money',    label: 'Moov Money',       icon: 'phone-portrait-outline',  iconColor: '#ea580c', logoBg: '#fff9f0', available: false },
+  { id: 'Carte bancaire',label: 'Mastercard / Visa',icon: 'card-outline',            iconColor: '#7c3aed', logoBg: '#f5f8ff', available: false },
 ];
 
 export default function SubscriptionScreen() {
@@ -292,16 +281,12 @@ export default function SubscriptionScreen() {
                   >
                     {/* Logo */}
                     <View style={{
-                      width: 52, height: 36, borderRadius: 8,
-                      backgroundColor: m.logoBg,
+                      width: 52, height: 36,
                       alignItems: 'center', justifyContent: 'center',
-                      marginBottom: 6, overflow: 'hidden',
+                      backgroundColor: m.logoBg, borderRadius: 8,
+                      marginBottom: 6,
                     }}>
-                      <Image
-                        source={m.logo}
-                        style={{ width: 48, height: 32 }}
-                        resizeMode="contain"
-                      />
+                      <Ionicons name={m.icon as any} size={22} color={m.iconColor} />
                     </View>
                     <Text style={{
                       fontSize: 10, fontWeight: '700', textAlign: 'center',

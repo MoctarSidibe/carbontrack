@@ -36,6 +36,7 @@ export interface Site {
   description: string;
   assessment_count: number;
   created_at: string;
+  country?: string | null;
 }
 
 export type AssessmentStatus = 'draft' | 'in_progress' | 'completed';
@@ -91,8 +92,33 @@ export type CertificationStatus =
   | 'pending'
   | 'assigned'
   | 'in_progress'
+  | 'audit_done'
   | 'certified'
   | 'rejected';
+
+export interface Notification {
+  id: number;
+  type: string;          // cert_request | cert_assigned | cert_validated | cert_rejected | cert_comment | ...
+  title: string;
+  message: string;
+  link: string | null;   // e.g. /dashboard/certifications
+  read: boolean;
+  created_at: string;
+}
+
+export interface NotificationsResponse {
+  notifications: Notification[];
+  unread: number;
+}
+
+export interface CertificationDocument {
+  id: number;
+  docType: string;
+  originalName: string;
+  fileSize: number;
+  mimeType: string;
+  createdAt: string;
+}
 
 export interface Certification {
   id: number;
@@ -111,6 +137,16 @@ export interface Certification {
   certificateNumber: string | null;
   rejectionReason: string | null;
   inspectionDate: string | null;
+  // New audit-scheduling fields (synced with web)
+  auditScheduledDate: string | null;
+  auditLocation: string | null;
+  inspectionConfirmed: boolean;
+  inspectionProposedDate: string | null;
+  inspectionProposedBy: 'admin' | 'expert' | null;
+  // Generated expert report PDF URL (for download once audit_done / certified)
+  expertReportPdfUrl: string | null;
+  // Documents uploaded by company to support the certification request
+  documents: CertificationDocument[];
   companyMessage: string | null;
   requestedAt: string;
 }
@@ -140,6 +176,7 @@ export interface Report {
     site_address: string;
     company_name: string;
     sector: string;
+    logo_url?: string | null;
   };
   summary: ReportSummary;
   byCategory: Record<string, number>;

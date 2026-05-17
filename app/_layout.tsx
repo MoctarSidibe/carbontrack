@@ -13,7 +13,8 @@ export default function RootLayout() {
     (async () => {
       const token = await getToken();
       const inApp = segments[0] === '(app)';
-      const inAuth = segments[0] === 'login' || segments[0] === 'landing';
+      const inAuth = segments[0] === 'login' || segments[0] === 'landing' || segments[0] === 'register'
+        || segments[0] === 'privacy' || segments[0] === 'terms';
 
       if (!token && inApp) {
         router.replace('/landing');
@@ -31,6 +32,9 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="landing" />
         <Stack.Screen name="login" />
+        <Stack.Screen name="register" />
+        <Stack.Screen name="privacy" />
+        <Stack.Screen name="terms" />
         <Stack.Screen name="(app)" />
       </Stack>
     </SafeAreaProvider>

@@ -267,6 +267,13 @@ export default function AssessmentDetailScreen() {
         </tr>`;
       }).join('');
 
+      // Logo resolution
+      let logoSrc = '';
+      const rawLogo = report?.assessment?.logo_url;
+      if (rawLogo) {
+        logoSrc = rawLogo.startsWith('http') ? rawLogo : `${API_URL}${rawLogo}`;
+      }
+
       // Status-specific cover elements
       const isDraft = assessment.status === 'draft' || assessment.status === 'in_progress';
       const isCertified = cert?.status === 'certified';
@@ -344,9 +351,12 @@ export default function AssessmentDetailScreen() {
 
 <!-- COVER PAGE -->
 <div class="cover">
-  <div class="cover-brand"><div class="cover-dot"></div>CARBONTRACK</div>
+  ${logoSrc 
+    ? `<img src="${logoSrc}" style="max-height: 90px; max-width: 250px; object-fit: contain; display: block; margin-bottom: 24px; border-radius: 6px;" />` 
+    : `<div class="cover-brand"><div class="cover-dot"></div>CARBONTRACK</div>`
+  }
   <h1>${assessment.name}</h1>
-  <div class="cover-sub">${assessment.site_name} &nbsp;&middot;&nbsp; Année ${assessment.year}</div>
+  <div class="cover-sub">${assessment.site_name}, ${assessment.country || 'Global'} &nbsp;&middot;&nbsp; Année ${assessment.year}</div>
   <div class="cover-meta">Bilan Carbone &mdash; Rapport d&apos;émissions GES</div>
   <div class="badges">
     <span class="badge">ISO 14064-1</span>
@@ -370,6 +380,16 @@ export default function AssessmentDetailScreen() {
 
 <!-- CONTENT -->
 <div class="content">
+
+  ${logoSrc ? `
+  <!-- Header with logo -->
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1.5px solid #22c55e; padding-bottom: 12px; margin-bottom: 18px;">
+    <img src="${logoSrc}" style="max-height: 38px; max-width: 150px; object-fit: contain;" />
+    <div style="font-size: 9px; color: #6b7280; text-align: right; line-height: 1.4;">
+      <strong>${assessment.name}</strong><br/>
+      ${report?.assessment?.company_name ? `${report.assessment.company_name} &middot; ${assessment.site_name}, ${assessment.country || 'Global'}` : `${assessment.site_name}, ${assessment.country || 'Global'}`} &middot; Annee ${assessment.year}
+    </div>
+  </div>` : ''}
 
   <!-- Summary cards -->
   <div class="section-title">Résumé des émissions</div>
