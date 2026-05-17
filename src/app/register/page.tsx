@@ -19,6 +19,7 @@ export default function RegisterPage() {
   })
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -96,6 +97,10 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!acceptedTerms) {
+      setError('Vous devez accepter la Politique de confidentialité et les CGU pour continuer.')
+      return
+    }
     setError('')
     setLoading(true)
 
@@ -104,7 +109,11 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          acceptedTermsVersion: '1.0',
+          acceptedAt: new Date().toISOString(),
+        }),
       })
       const data = await res.json()
 
@@ -273,9 +282,30 @@ export default function RegisterPage() {
               />
             </div>
 
+            {/* Legal acceptance — required */}
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+              />
+              <span className="text-xs text-gray-600 leading-relaxed">
+                J&apos;ai lu et j&apos;accepte la{' '}
+                <Link href="/privacy" target="_blank" className="text-brand-600 font-semibold underline hover:text-brand-700">
+                  Politique de confidentialité
+                </Link>
+                {' '}et les{' '}
+                <Link href="/conditions-utilisation" target="_blank" className="text-brand-600 font-semibold underline hover:text-brand-700">
+                  Conditions Générales d&apos;Utilisation
+                </Link>
+                {' '}de CarbonTrack, alignées sur les principes du Règlement Général sur la Protection des Données (RGPD).
+              </span>
+            </label>
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !acceptedTerms}
               className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {loading ? 'Création en cours...' : 'Créer mon compte'}

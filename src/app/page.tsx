@@ -243,11 +243,23 @@ export default function HomePage() {
             {/* Screenshots side */}
             <div className="relative">
               <div className="grid grid-cols-3 gap-3">
-                {[1, 2, 3].map(n => (
-                  <div key={n} className={`bg-gray-100 border-2 border-dashed border-gray-300 rounded-3xl flex flex-col items-center justify-center text-center p-4 ${n === 2 ? 'mt-6' : ''}`}
-                    style={{ aspectRatio: '9/19' }}>
-                    <Smartphone className="w-6 h-6 text-gray-300 mb-2" />
-                    <span className="text-[10px] text-gray-400 leading-tight">Capture d&apos;écran<br />mobile {n}</span>
+                {[
+                  { src: '/screenshots/mobile-landing.jpg',   alt: 'Écran d\'accueil CarbonTrack' },
+                  { src: '/screenshots/mobile-login.jpg',     alt: 'Écran de connexion CarbonTrack' },
+                  { src: '/screenshots/mobile-dashboard.jpg', alt: 'Tableau de bord CarbonTrack' },
+                ].map((shot, i) => (
+                  <div
+                    key={shot.src}
+                    className={`bg-gray-900 rounded-3xl overflow-hidden shadow-lg ring-1 ring-gray-200 ${i === 1 ? 'mt-6' : ''}`}
+                    style={{ aspectRatio: '9/19' }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={shot.src}
+                      alt={shot.alt}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
                   </div>
                 ))}
               </div>
