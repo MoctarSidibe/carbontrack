@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cabinet Green Leaves Gabon | Experts environnementaux</title>
+  <meta name="description"
+    content="Cabinet Green Leaves Gabon - Conseil juridique, études environnementales, innovation climat et accompagnement des projets à impact écologique au Gabon." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="icon" type="image/png" href="Gemini_Generated_Image_5rybu05rybu05ryb.png" />
+  <link rel="stylesheet" href="styles.css?v=1.1" />
+  <style>
+    /* ── Header right-side wrapper (CTA + hamburger) ── */
+    .header-right { display: flex; align-items: center; gap: 0.6rem; }
+
+    /* ── Launch CarbonTrack pill button ── */
+    .cta-app-launch {
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      padding: 0.4rem 0.95rem 0.4rem 0.4rem;
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 60%, #15803d 100%);
+      color: #ffffff !important;
+      border-radius: 999px;
+      font-weight: 700; text-decoration: none;
+      box-shadow: 0 8px 18px -8px rgba(34, 197, 94, 0.55), 0 2px 6px -2px rgba(0, 0, 0, 0.12);
+      border: 1.5px solid rgba(255, 255, 255, 0.18);
+      transition: transform 200ms ease, box-shadow 200ms ease;
+      white-space: nowrap;
+    }
+    .cta-app-launch:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 26px -8px rgba(34, 197, 94, 0.7), 0 4px 10px -2px rgba(0, 0, 0, 0.15);
+    }
+    .cta-app-launch-icon {
+      width: 30px; height: 30px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+      box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.08);
+    }
+    .cta-app-launch-text { display: flex; flex-direction: column; line-height: 1; gap: 2px; }
+    .cta-app-launch-label {
+      font-size: 0.58rem; font-weight: 700; opacity: 0.9;
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .cta-app-launch-brand { font-size: 0.95rem; font-weight: 800; letter-spacing: -0.01em; }
+    .cta-app-launch-arrow { font-size: 0.7rem; opacity: 0.85; margin-left: 0.15rem; }
+
+    @media (max-width: 768px) {
+      .cta-app-launch { padding: 0.35rem 0.75rem 0.35rem 0.35rem; gap: 0.45rem; }
+      .cta-app-launch-icon { width: 26px; height: 26px; font-size: 0.8rem; }
+      .cta-app-launch-label { display: none; }
+      .cta-app-launch-brand { font-size: 0.8rem; }
+      .cta-app-launch-arrow { display: none; }
+      .header-right { gap: 0.4rem; }
+    }
+
+    @media (max-width: 360px) {
+      .cta-app-launch-brand { font-size: 0.72rem; }
+    }
+
+    /* ── Compact hero ── */
+    .hero.compact { padding: 1.75rem 0 2.5rem !important; margin-top: -0.5rem !important; }
+    .hero.compact h1 { font-size: clamp(1.85rem, 3.5vw, 2.45rem); line-height: 1.15; margin-bottom: 0.75rem; }
+    .hero.compact .hero-text > p { font-size: 0.95rem; line-height: 1.55; }
+    .hero.compact .hero-stats strong { font-size: 1.4rem; }
+    .hero.compact .hero-stats { gap: 1.5rem; margin-top: 1.25rem; }
+    .hero.compact .hero-visual img { max-height: 320px; width: auto; margin-inline: auto; display: block; }
+    .hero.compact .hero-actions { margin-top: 1.25rem !important; }
+
+    /* ── CarbonTrack showcase ── */
+    .carbontrack-showcase { background: linear-gradient(180deg, #f6fdf8 0%, #ffffff 100%); padding: 4rem 0; }
+    .carbontrack-showcase .section-header { margin-bottom: 2rem; }
+
+    /* 2 separate device hero-cards side-by-side, each with their own label */
+    .showcase-devices {
+      display: grid;
+      grid-template-columns: 1.55fr 1fr;
+      gap: 1.5rem;
+      align-items: stretch;
+      max-width: 1040px;
+      margin: 0 auto 2.5rem;
+    }
+
+    .device-hero {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem 1.5rem 1.75rem;
+      border-radius: 22px;
+      border: 1px solid rgba(34, 197, 94, 0.16);
+      background: linear-gradient(155deg, #ffffff 0%, #f0fdf4 100%);
+      box-shadow: 0 14px 35px -16px rgba(15, 65, 30, 0.20), 0 4px 14px -4px rgba(15, 65, 30, 0.08);
+      overflow: hidden;
+      transition: transform 250ms ease, box-shadow 250ms ease;
+    }
+    .device-hero:hover { transform: translateY(-4px); box-shadow: 0 22px 45px -18px rgba(15, 65, 30, 0.28), 0 8px 22px -8px rgba(15, 65, 30, 0.12); }
+    .device-hero.mobile { background: linear-gradient(155deg, #ffffff 0%, #ecfeff 100%); border-color: rgba(20, 184, 166, 0.18); align-items: center; }
+
+    /* Decorative blob */
+    .device-hero::before {
+      content: '';
+      position: absolute; top: -40px; right: -40px;
+      width: 160px; height: 160px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(34, 197, 94, 0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .device-hero.mobile::before { background: radial-gradient(circle, rgba(20, 184, 166, 0.18) 0%, transparent 70%); }
+
+    .device-label {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
+      color: #15803d;
+      background: rgba(34, 197, 94, 0.12);
+      padding: 0.35rem 0.7rem;
+      border-radius: 999px;
+      align-self: flex-start;
+      margin-bottom: 0.5rem;
+    }
+    .device-hero.mobile .device-label { color: #0f766e; background: rgba(20, 184, 166, 0.12); }
+    .device-label i { font-size: 0.7rem; }
+
+    .device-title { font-size: 1.15rem; margin: 0 0 0.35rem; color: #14532d; font-weight: 700; }
+    .device-tagline { font-size: 0.85rem; color: #4b5563; line-height: 1.5; margin: 0 0 1.25rem; }
+    .device-hero.mobile .device-title { color: #134e4a; text-align: center; }
+    .device-hero.mobile .device-tagline { text-align: center; }
+
+    .device-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1.25rem; }
+    .device-pill {
+      font-size: 0.7rem; font-weight: 600; color: #15803d;
+      background: rgba(34, 197, 94, 0.10);
+      border: 1px solid rgba(34, 197, 94, 0.20);
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+    }
+    .device-hero.mobile .device-pill { color: #0f766e; background: rgba(20, 184, 166, 0.10); border-color: rgba(20, 184, 166, 0.20); }
+
+    .desktop-preview {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 18px 32px -16px rgba(15, 65, 30, 0.28), 0 6px 16px -6px rgba(15, 65, 30, 0.10);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      background: #1f2937;
+    }
+    .desktop-preview::before {
+      content: ''; display: block;
+      height: 20px; background: #1f2937;
+      background-image: radial-gradient(circle 4px at 12px center, #ff5f57 99%, transparent 0),
+                        radial-gradient(circle 4px at 26px center, #febc2e 99%, transparent 0),
+                        radial-gradient(circle 4px at 40px center, #28c840 99%, transparent 0);
+      background-repeat: no-repeat;
+    }
+    .desktop-preview img { display: block; width: 100%; height: auto; }
+
+    .phone-frame {
+      width: 100%; max-width: 220px;
+      margin: 0 auto;
+      border-radius: 26px;
+      padding: 7px;
+      background: #111827;
+      box-shadow: 0 18px 32px -14px rgba(0, 0, 0, 0.32), 0 6px 16px -4px rgba(0, 0, 0, 0.16);
+      transition: transform 250ms ease;
+    }
+    .phone-frame img {
+      display: block; width: 100%; height: auto;
+      border-radius: 20px;
+      aspect-ratio: 9/19;
+      object-fit: cover;
+    }
+
+    .apps-features { gap: 1.25rem; margin-bottom: 2.5rem; }
+    .apps-features .feature-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 1.5rem;
+      border: 1px solid rgba(34, 197, 94, 0.15);
+      box-shadow: 0 4px 12px rgba(15, 65, 30, 0.05);
+      transition: transform 200ms ease, box-shadow 200ms ease;
+    }
+    .apps-features .feature-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(15, 65, 30, 0.1); }
+    .apps-features .feature-card .feature-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: #dcfce7; color: #15803d;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.15rem; margin-bottom: 0.85rem;
+    }
+    .apps-features .feature-card h3 { font-size: 1.05rem; margin-bottom: 0.4rem; color: var(--color-primary-dark, #14532d); }
+    .apps-features .feature-card p { font-size: 0.9rem; color: var(--color-gray-700, #374151); line-height: 1.5; margin: 0; }
+
+    .apps-cta { display: flex; justify-content: center; gap: 0.9rem; flex-wrap: wrap; align-items: center; }
+
+    /* "Bientôt disponible" badge for the showcase header */
+    .coming-soon-badge {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      color: #92400e;
+      font-size: 0.7rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.12em;
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      margin-bottom: 0.85rem;
+    }
+    .coming-soon-badge .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #f59e0b;
+      box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5);
+      animation: pulse-dot 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
+      50% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+    }
+
+    /* "Bientôt" disabled primary CTA inside the showcase */
+    .cta-btn.coming-soon {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%) !important;
+      color: #166534 !important;
+      cursor: default !important;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15) !important;
+      pointer-events: none;
+    }
+    .cta-btn.coming-soon:hover {
+      transform: none !important;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15) !important;
+    }
+
+    @media (max-width: 720px) {
+      .carbontrack-showcase { padding: 3rem 0; }
+      .showcase-devices { grid-template-columns: 1fr; gap: 1.25rem; }
+      .device-hero { padding: 1.25rem 1.25rem 1.5rem; }
+      .desktop-preview::before { height: 18px; background-position: -4px center, 12px center, 28px center; }
+      .phone-frame { max-width: 200px; padding: 6px; border-radius: 22px; }
+      .phone-frame img { border-radius: 18px; }
+    }
+
+    /* ====================================
+       Global mobile polish — Pro look on phones
+       ==================================== */
+    @media (max-width: 768px) {
+      /* Reduced vertical rhythm — keep sections compact */
+      section { padding: 2.5rem 0 !important; }
+
+      .container { padding: 0 1.1rem; }
+
+      /* Typography scale */
+      h1 { font-size: clamp(1.75rem, 7.5vw, 2.4rem) !important; line-height: 1.2 !important; }
+      h2 { font-size: clamp(1.45rem, 5.5vw, 1.95rem) !important; line-height: 1.25 !important; }
+      h3 { font-size: 1.05rem !important; }
+      p { font-size: 0.95rem; }
+      .text-lead { font-size: 0.98rem !important; }
+      .section-eyebrow { font-size: 0.65rem; padding: 3px 10px; }
+      .section-header { margin-bottom: 1.5rem; text-align: center; }
+
+      /* Header — tighter logo */
+      .site-header .container { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+      .logo-img { height: 38px !important; }
+
+      /* HERO — phone-first */
+      .hero.compact { padding: 1.5rem 0 2.25rem !important; text-align: center; }
+      .hero.compact h1 { font-size: 1.65rem !important; margin-bottom: 0.65rem; }
+      .hero.compact .hero-text > p { font-size: 0.92rem !important; }
+      .hero.compact .hero-text > .section-eyebrow,
+      .hero.compact .hero-text > p:first-of-type { display: inline-block; }
+      .hero.compact .hero-visual { display: none; }
+      .hero.compact .hero-actions {
+        margin-top: 1.25rem !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.65rem !important;
+      }
+      .hero.compact .hero-actions .cta-btn { width: 100%; padding: 0.85rem 1.25rem; font-size: 0.95rem; }
+      .hero.compact .hero-stats {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 0.75rem !important;
+        margin-top: 1.5rem !important;
+        padding-top: 1rem !important;
+        text-align: center !important;
+      }
+      .hero.compact .hero-stats strong { font-size: 1.2rem !important; }
+      .hero.compact .hero-stats span { font-size: 0.65rem !important; letter-spacing: 0 !important; }
+
+      /* Highlights — single column, tighter */
+      .highlight-grid { grid-template-columns: 1fr !important; gap: 0.75rem !important; margin-top: 1rem !important; }
+      .highlight-grid article { padding: 1.15rem !important; }
+
+      /* CarbonTrack showcase — already responsive, just tighter padding */
+      .carbontrack-showcase { padding: 2.5rem 0 !important; }
+      .device-hero { padding: 1.1rem 1.1rem 1.35rem !important; border-radius: 18px !important; }
+      .device-title { font-size: 1.05rem !important; }
+      .device-tagline { font-size: 0.85rem !important; margin-bottom: 1rem !important; }
+      .device-label { font-size: 0.65rem !important; padding: 0.3rem 0.6rem !important; }
+      .device-pills { margin-top: 1rem !important; }
+      .device-pill { font-size: 0.65rem !important; padding: 0.2rem 0.55rem !important; }
+      .apps-features { gap: 0.85rem !important; margin-bottom: 2rem !important; }
+      .apps-features .feature-card { padding: 1.15rem !important; border-radius: 14px !important; }
+      .apps-features .feature-card h3 { font-size: 1rem !important; }
+      .apps-features .feature-card p { font-size: 0.85rem !important; }
+      .apps-cta { flex-direction: column !important; align-items: stretch !important; gap: 0.65rem !important; }
+      .apps-cta .cta-btn { width: 100%; }
+
+      /* Services — compact cards */
+      .services .grid { gap: 0.85rem !important; }
+      .service-card { padding: 1.15rem !important; }
+      .service-card h3 { font-size: 1rem !important; }
+      .service-card ul { margin-top: 0.5rem; }
+      .service-card li { font-size: 0.88rem; }
+
+      /* Formations */
+      .formations { padding-bottom: 2.5rem !important; }
+      .formations article.card { padding: 1.25rem !important; }
+      .formations .grid { gap: 0.85rem !important; }
+      .formations h3 { font-size: 1.1rem !important; }
+      .formation-module { padding: 0.8rem !important; }
+
+      /* Signature */
+      .signature-items { gap: 0.85rem; }
+
+      /* Experts — 2 columns on phones for density */
+      .experts .grid.grid-4 { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 0.65rem !important; }
+      .expert-card { padding: 0.85rem !important; }
+      .expert-card h3 { font-size: 0.95rem !important; }
+      .expert-card .role { font-size: 0.7rem !important; margin-bottom: 0.5rem !important; }
+      .expert-card li { font-size: 0.78rem !important; padding-left: 0.75rem !important; }
+
+      /* Trusted logos — 3 columns to stay compact (instead of 1 col stack of 6) */
+      .trusted-logos { grid-template-columns: 1fr 1fr 1fr !important; gap: 0.5rem !important; }
+      .logo-card { padding: 0.85rem !important; font-size: 0.8rem !important; }
+
+      /* Approach */
+      .approach-steps { gap: 0.85rem !important; }
+      .approach-steps .card { padding: 1.15rem !important; }
+
+      /* Realisations */
+      .realisations-grid { display: grid; grid-template-columns: 1fr; gap: 0.85rem; }
+      .realisations-grid article { padding: 1.15rem !important; }
+
+      /* Territory */
+      .territory-content { display: flex; flex-direction: column; gap: 1rem; }
+      .territory-cards { display: grid; grid-template-columns: 1fr; gap: 0.85rem; }
+      .territory-cards article { padding: 1.15rem !important; }
+
+      /* CTA banner */
+      .cta-section-updated { padding: 2rem 1.1rem !important; }
+      .cta-section-updated h2 { font-size: 1.2rem !important; }
+      .cta-section-updated p { font-size: 0.9rem !important; }
+
+      /* Contact */
+      .contact { padding: 2.5rem 0 !important; }
+      .contact-cards { grid-template-columns: 1fr !important; gap: 0.75rem !important; }
+      .contact-card { padding: 1.35rem 1rem !important; }
+
+      /* Footer */
+      .site-footer { padding: 0.5rem 0 1.25rem !important; }
+      .footer-content { gap: 1rem !important; }
+      .footer-links { gap: 0.85rem !important; font-size: 0.85rem; }
+    }
+
+    @media (max-width: 480px) {
+      /* Ultra-narrow phones */
+      .container { padding: 0 0.9rem; }
+      h1 { font-size: 1.55rem !important; }
+      h2 { font-size: 1.35rem !important; }
+      .hero.compact h1 { font-size: 1.55rem !important; }
+      .hero.compact .hero-stats strong { font-size: 1.1rem !important; }
+      .hero.compact .hero-stats span { font-size: 0.6rem !important; }
+      .device-hero { padding: 0.95rem !important; }
+      .device-title { font-size: 1rem !important; }
+      .device-tagline { font-size: 0.8rem !important; }
+      .phone-frame { max-width: 170px !important; }
+      /* Experts back to 1 column on very narrow screens for readability */
+      .experts .grid.grid-4 { grid-template-columns: 1fr !important; }
+      /* Trusted logos: 2 cols on ultra narrow */
+      .trusted-logos { grid-template-columns: 1fr 1fr !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="container">
+      <div class="branding">
+        <img src="Gemini_Generated_Image_5rybu05rybu05ryb.png" alt="Green Leaves Gabon Logo" class="logo-img" />
+      </div>
+      <nav class="main-nav" id="site-nav">
+        <a href="#applications">Nos Apps</a>
+        <a href="#services">Services</a>
+        <a href="#formations-detail">Formations</a>
+        <a href="#experts">Experts agréés</a>
+        <a href="#approche">Notre approche</a>
+        <a href="#realisations">Réalisations</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <div class="header-right">
+        <a class="cta-app-launch"
+           href="#applications"
+           aria-label="Découvrir CarbonTrack — bientôt disponible">
+          <span class="cta-app-launch-icon"><i class="fas fa-leaf"></i></span>
+          <span class="cta-app-launch-text">
+            <span class="cta-app-launch-label">Bientôt</span>
+            <span class="cta-app-launch-brand">CarbonTrack</span>
+          </span>
+          <i class="fas fa-arrow-down cta-app-launch-arrow"></i>
+        </a>
+        <button class="nav-toggle" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="site-nav">
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero bg-slice-green compact" data-animate>
+      <div class="container overflow-visible">
+        <div class="grid grid-2" style="align-items: center;">
+          <div class="hero-text">
+            <span class="section-eyebrow" style="background: rgba(255,255,255,0.2); color: white;">Expert C.A.
+              Libreville</span>
+            <p style="font-size: 1.1rem; color: rgba(255,255,255,0.9); margin-bottom: 1rem; font-weight: 500;">Cabinet
+              d’expertise en droit & gestion de l’environnement</p>
+            <h1>Donnez un avantage durable à vos projets</h1>
+            <p>
+              Green Leaves Gabon vous accompagne de la vision à la conformité : conseil juridique, études
+              d’impact et innovation climatique pour des projets responsables.
+            </p>
+            <div class="hero-actions" style="margin-top: 2rem; display: flex; gap: 1rem;">
+              <a class="cta-btn primary" style="background: white; color: var(--color-primary);" href="#services">Nos
+                Services</a>
+              <a class="cta-btn ghost" href="#contact">Nous Contacter</a>
+            </div>
+
+            <div class="hero-stats">
+              <div data-animate>
+                <strong>15+</strong>
+                <span style="color: rgba(255,255,255,0.8);">Experts</span>
+              </div>
+              <div data-animate>
+                <strong>9/9</strong>
+                <span style="color: rgba(255,255,255,0.8);">Provinces</span>
+              </div>
+              <div data-animate>
+                <strong>100%</strong>
+                <span style="color: rgba(255,255,255,0.8);">Conformité</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Visual/Card Side -->
+          <div class="hero-visual" style="position: relative;">
+            <img src="Gemini_Generated_Image_5rybu05rybu05ryb.png" alt="Green Leaves Identity"
+              style="border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); transform: rotate(2deg); border: 4px solid rgba(255,255,255,0.2);">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================
+         CarbonTrack Showcase (moved here, before Services)
+         =================================== -->
+    <section id="applications" class="carbontrack-showcase" data-animate>
+      <div class="container">
+        <div class="section-header">
+          <span class="section-eyebrow">Notre plateforme</span>
+          <h2>CarbonTrack — votre bilan carbone certifié</h2>
+          <span class="coming-soon-badge"><span class="dot"></span> Bientôt disponible</span>
+          <p class="text-lead">
+            La plateforme web &amp; mobile pensée pour les entreprises gabonaises : calculez vos émissions GES selon
+            <strong>GHG Protocol</strong> et <strong>ISO 14064-1</strong>, faites auditer vos bilans par nos experts
+            accrédités, obtenez votre certification officielle.
+          </p>
+        </div>
+
+        <!-- Two distinct device hero-cards: Desktop (left) + Application Mobile (right) -->
+        <div class="showcase-devices" data-animate>
+
+          <!-- ── Desktop hero ── -->
+          <article class="device-hero desktop" data-animate>
+            <span class="device-label"><i class="fas fa-desktop"></i> Desktop</span>
+            <h3 class="device-title">Application Web</h3>
+            <p class="device-tagline">
+              Pilotez vos bilans carbone depuis votre navigateur — Windows, macOS, Linux. Tableaux de bord
+              détaillés, génération de rapports PDF, gestion d'équipe.
+            </p>
+            <div class="desktop-preview">
+              <img src="carbon%20track%20Desktop.png" alt="CarbonTrack — application web sur ordinateur" loading="lazy" />
+            </div>
+            <div class="device-pills">
+              <span class="device-pill">Chrome</span>
+              <span class="device-pill">Firefox</span>
+              <span class="device-pill">Safari</span>
+              <span class="device-pill">Edge</span>
+            </div>
+          </article>
+
+          <!-- ── Mobile hero ── -->
+          <article class="device-hero mobile" data-animate>
+            <span class="device-label"><i class="fas fa-mobile-screen"></i> Mobile</span>
+            <h3 class="device-title">Application Mobile</h3>
+            <p class="device-tagline">
+              Suivez vos certifications en mobilité. Notifications temps réel,
+              consultation des bilans, audit sur le terrain.
+            </p>
+            <div class="phone-frame">
+              <img src="mobile-dashboard.jpg" alt="CarbonTrack mobile — tableau de bord" loading="lazy" />
+            </div>
+            <div class="device-pills">
+              <span class="device-pill">iOS</span>
+              <span class="device-pill">Android</span>
+            </div>
+          </article>
+
+        </div>
+
+        <!-- 3 feature pillars -->
+        <div class="grid grid-3 apps-features">
+          <article class="feature-card" data-animate>
+            <div class="feature-icon"><i class="fas fa-chart-column"></i></div>
+            <h3>Bilan carbone complet</h3>
+            <p>Saisie guidée Scope 1, 2 et 3 avec 100+ facteurs d'émission vérifiés (Base Carbone ADEME). Rapports PDF prêts à
+              déposer.</p>
+          </article>
+          <article class="feature-card" data-animate>
+            <div class="feature-icon"><i class="fas fa-user-shield"></i></div>
+            <h3>Audit &amp; certification</h3>
+            <p>Vos données sont revues par des experts indépendants accrédités. Certificat officiel CarbonTrack signé par
+              GreenLeaves.</p>
+          </article>
+          <article class="feature-card" data-animate>
+            <div class="feature-icon"><i class="fas fa-mobile-screen"></i></div>
+            <h3>Web &amp; mobile synchronisés</h3>
+            <p>Travaillez depuis n'importe quel appareil. Notifications temps réel sur l'avancement de vos demandes de
+              certification.</p>
+          </article>
+        </div>
+
+        <!-- CTA -->
+        <div class="apps-cta" data-animate>
+          <span class="cta-btn coming-soon">
+            <i class="far fa-clock" style="margin-right: 0.5rem;"></i>
+            Bientôt disponible
+          </span>
+          <a class="cta-btn primary" href="#contact" style="background: var(--color-primary); color: white;">
+            <i class="fas fa-envelope-open-text" style="margin-right: 0.5rem;"></i>
+            Demander un accès anticipé
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="highlights" data-animate>
+      <div class="container">
+        <div class="highlight-grid">
+          <article data-animate>
+            <div style="color: var(--color-secondary); font-size: 2rem; margin-bottom: 0.5rem;"><i
+                class="fas fa-shield-alt"></i></div>
+            <h3>Projets Sécurisés</h3>
+            <p>Accompagnement de projets miniers et forestiers à forte sensibilité.</p>
+          </article>
+          <article data-animate>
+            <div style="color: var(--color-secondary); font-size: 2rem; margin-bottom: 0.5rem;"><i
+                class="fas fa-certificate"></i></div>
+            <h3>Compétences Certifiées</h3>
+            <p>Spécialistes reconnus au Gabon et à l’international.</p>
+          </article>
+          <article data-animate>
+            <div style="color: var(--color-secondary); font-size: 2rem; margin-bottom: 0.5rem;"><i
+                class="fas fa-map-marked-alt"></i></div>
+            <h3>Couverture Nationale</h3>
+            <p>Présence terrain dans les 9 provinces du Gabon.</p>
+          </article>
+          <article data-animate>
+            <div style="color: var(--color-secondary); font-size: 2rem; margin-bottom: 0.5rem;"><i
+                class="fas fa-check-circle"></i></div>
+            <h3>Alignement Légal</h3>
+            <p>Veille continue sur le Code de l’environnement et normes ESG.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="services" class="services" data-animate>
+      <div class="container">
+        <div class="section-header">
+          <span class="section-eyebrow">Services Stratégiques</span>
+          <h2>Des solutions sur-mesure</h2>
+          <p class="text-lead">
+            Notre cabinet couvre l’intégralité de la chaîne de valeur environnementale.
+          </p>
+        </div>
+        <div class="grid grid-3">
+          <article class="service-card" data-animate>
+            <h3><i class="fas fa-gavel"></i> I. Conseil juridique environnemental</h3>
+            <ul>
+              <li>Conformité avec le Code de l’environnement gabonais</li>
+              <li>Veille internationale : CITES, CBD, accords climatiques</li>
+              <li>Rédaction de contrats & clauses environnementales</li>
+              <li>Accompagnement de projets à fort impact écologique</li>
+              <li>Contentieux & assistance judiciaire spécialisée</li>
+            </ul>
+          </article>
+          <article class="service-card" data-animate>
+            <h3><i class="fas fa-clipboard-check"></i> II. Études environnementales</h3>
+            <ul>
+              <li>Études d’Impact Environnemental et Social (EIES)</li>
+              <li>Études de Danger (EDD) & gestion des risques</li>
+              <li>Gestion durable des déchets et économie circulaire</li>
+              <li>Inventaires faune, flore & habitats sensibles</li>
+              <li>Plans de Gestion Environnementale et Sociale (PGES)</li>
+            </ul>
+          </article>
+          <article class="service-card" data-animate>
+            <h3><i class="fas fa-globe-africa"></i> III. État des lieux juridique mondial</h3>
+            <ul>
+              <li>Analyse comparative des cadres légaux internationaux</li>
+              <li>Focus essences forestières protégées (Kevazingo, Okoumé, Ebène…)</li>
+              <li>Études sur les espèces rares et endémiques (Pangolin, Mandrill…)</li>
+              <li>Recommandations pour l’intégration nationale</li>
+            </ul>
+          </article>
+          <article class="service-card" data-animate>
+            <h3><i class="fas fa-lightbulb"></i> IV. Innovation & climat</h3>
+            <ul>
+              <li>Bilans carbone pour entreprises & collectivités</li>
+              <li>Conseil sur taxe carbone, impôt vert & marchés carbone</li>
+              <li>Stratégies d’adaptation et d’atténuation</li>
+              <li>Programmes RSE et finance climatique</li>
+            </ul>
+          </article>
+          <article class="service-card" data-animate>
+            <h3><i class="fas fa-people-group"></i> V. Ingénierie sociale & acceptabilité</h3>
+            <ul>
+              <li>Analyse des dynamiques communautaires et conflits</li>
+              <li>Études d’acceptabilité des projets miniers, forestiers, énergétiques</li>
+              <li>Médiation entre communautés et porteurs de projets</li>
+              <li>Accompagnement des Plans de Développement Communautaire</li>
+              <li>Suivi des impacts sociaux & recommandations RSE</li>
+            </ul>
+          </article>
+          <article class="service-card" data-animate>
+            <h3><i class="fas fa-chart-line"></i> VI. Collecte & traitement de données</h3>
+            <ul>
+              <li>Enquêtes socio-environnementales de terrain</li>
+              <li>Analyse des impacts cumulés et modélisation</li>
+              <li>Indicateurs de suivi environnemental & social</li>
+              <li>SIG & cartographie participative</li>
+            </ul>
+          </article>
+
+          <article class="service-card" data-animate>
+            <h3><i class="fas fa-landmark"></i> VIII. Gouvernance environnementale</h3>
+            <ul>
+              <li>Rédaction de référentiels, guides et manuels de conformité</li>
+              <li>Conseil aux ministères et administrations</li>
+              <li>Appui aux communes pour intégrer les enjeux environnementaux</li>
+            </ul>
+          </article>
+          <article class="service-card" data-animate>
+            <h3><i class="fas fa-microscope"></i> IX. Analyse PESTEL</h3>
+            <ul>
+              <li>Lectures macro-économiques, politiques et sociétales</li>
+              <li>Scenarii de risques et opportunités sectorielles</li>
+              <li>Recommandations stratégiques pour décideurs publics et privés</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="formations-detail" class="formations" style="background: var(--color-white);" data-animate>
+      <div class="container">
+        <div class="section-header">
+          <span class="section-eyebrow">Montée en compétences</span>
+          <h2>Formations & Renforcement de Capacités</h2>
+          <p class="text-lead">Des programmes certifiants aux standards internationaux (Banque Mondiale, BAD) pour vos
+            équipes.</p>
+        </div>
+        <div class="grid grid-2">
+          <!-- Featured Course -->
+          <article class="card" style="border-left: 4px solid var(--color-secondary); grid-column: 1 / -1;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+              <i class="fas fa-star" style="color: var(--color-secondary); font-size: 1.5rem;"></i>
+              <h3 style="margin: 0; font-size: 1.5rem;">Formation Sauvegarde Environnementale et Sociale</h3>
+            </div>
+            <p style="margin-bottom: 1.5rem; color: var(--color-gray-700);">Programme complet aligné sur les standards
+              de la Banque Mondiale & de la Banque Africaine de Développement.</p>
+
+            <div class="grid grid-2" style="gap: 1rem;">
+              <div style="background: var(--color-off-white); padding: 1rem; border-radius: var(--radius-sm);">
+                <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--color-primary);">Cadres & Normes</h4>
+                <p style="font-size: 0.9rem; margin: 0;">Cadre Environnemental et Social (CES) & Normes de Performance
+                  (NP).</p>
+              </div>
+              <div style="background: var(--color-off-white); padding: 1rem; border-radius: var(--radius-sm);">
+                <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--color-primary);">Instruments</h4>
+                <p style="font-size: 0.9rem; margin: 0;">Maîtrise des outils : CGES, CPR, PAR, PPDP.</p>
+              </div>
+              <div style="background: var(--color-off-white); padding: 1rem; border-radius: var(--radius-sm);">
+                <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--color-primary);">Gestion Sociale</h4>
+                <p style="font-size: 0.9rem; margin: 0;">Mécanisme de Gestion des Plaintes (MGP) & prévention VBG.</p>
+              </div>
+              <div style="background: var(--color-off-white); padding: 1rem; border-radius: var(--radius-sm);">
+                <h4 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--color-primary);">Santé & Sécurité</h4>
+                <p style="font-size: 0.9rem; margin: 0;">Sécurité au Travail (SST) et gestion des risques chantiers.</p>
+              </div>
+            </div>
+          </article>
+
+          <!-- Other Modules -->
+          <article class="service-card">
+            <h3><i class="fas fa-certificate"></i> Modules Certifiants</h3>
+            <ul>
+              <li>Études d'impact (EIES) & de Danger (EDD)</li>
+              <li>Plans de Gestion (PGES)</li>
+              <li>Gestion durable des déchets</li>
+            </ul>
+          </article>
+          <article class="service-card">
+            <h3><i class="fas fa-balance-scale"></i> Droit & Climat</h3>
+            <ul>
+              <li>Réglementation environnementale gabonaise</li>
+              <li>Fiscalité verte et marchés carbone</li>
+              <li>Contentieux environnemental</li>
+            </ul>
+          </article>
+          <article class="service-card">
+            <h3><i class="fas fa-users"></i> Collectivités & PME</h3>
+            <ul>
+              <li>Ateliers de sensibilisation locaux</li>
+              <li>Accompagnement RSE pour PME</li>
+              <li>Ingénierie sociale de terrain</li>
+            </ul>
+          </article>
+          <article class="service-card"
+            style="display: flex; align-items: center; justify-content: center; background: var(--color-primary-light); text-align: center;">
+            <div>
+              <h3 style="color: var(--color-primary-dark); margin-bottom: 0.5rem;">Besoin d'une formation sur-mesure ?
+              </h3>
+              <a href="#contact" style="font-weight: 700; text-decoration: underline;">Contactez-nous</a>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <section class="signature" data-animate>
+        <div class="container signature-grid">
+          <div class="signature-intro">
+            <span class="section-eyebrow">Valeur ajoutée</span>
+            <h2>Une signature qui conjugue rigueur juridique & terrain</h2>
+            <p>
+              Nous associons expertise réglementaire, sciences environnementales et ingénierie sociale pour
+              co-construire
+              des solutions durables avec les institutions, les entreprises et les communautés.
+            </p>
+          </div>
+          <div class="signature-items">
+            <article data-animate>
+              <h3>Veille proactive</h3>
+              <p>Radar actualisé des conventions internationales, décisions gouvernementales et normes sectorielles.</p>
+            </article>
+            <article data-animate>
+              <h3>Approche partenariale</h3>
+              <p>Dialogue constant avec les communautés, ONG, administrations et bailleurs pour garantir l’adhésion.</p>
+            </article>
+            <article data-animate>
+              <h3>Livrables opérationnels</h3>
+              <p>Rapports actionnables, plans de gestion, guides de conformité et supports de plaidoyer institutionnel.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="experts" class="experts" data-animate>
+        <div class="container">
+          <div class="section-header">
+            <span class="section-eyebrow">Nos Experts</span>
+            <h2>Une équipe pluridisciplinaire</h2>
+            <p>Découvrez les experts certifiés qui accompagnent le Cabinet Green Leaves Gabon.</p>
+          </div>
+          <div class="grid grid-4" id="expert-grid-container">
+            <article class="expert-card" data-animate>
+              <h3>Robert Vigniko</h3>
+              <p class="role">Juriste principal – conformité environnementale</p>
+              <ul>
+                <li>Expert près la Cour d’Appel judiciaire de Libreville</li>
+                <li>Spécialiste du Code de l’environnement gabonais</li>
+                <li>Stratégies contractuelles à clauses durables</li>
+              </ul>
+            </article>
+            <article class="expert-card" data-animate>
+              <h3>Ren Ming</h3>
+              <p class="role">Analyste climat & marchés carbone</p>
+              <ul>
+                <li>Bilans carbone & trajectoires de neutralité</li>
+                <li>Études sur l’impôt vert et la taxe carbone</li>
+                <li>Montage de projets carbone pour entreprises</li>
+              </ul>
+            </article>
+            <article class="expert-card" data-animate>
+              <h3>Steeve Chango</h3>
+              <p class="role">Consultant EIES & risques industriels</p>
+              <ul>
+                <li>Direction d’Études d’Impact Environnemental et Social</li>
+                <li>Plans de Gestion Environnementale et Sociale (PGES)</li>
+                <li>Analyse des impacts cumulés et gestion des risques</li>
+              </ul>
+            </article>
+            <article class="expert-card" data-animate>
+              <h3>B. Koumba Mabert</h3>
+              <p class="role">Spécialiste biodiversité & ressources forestières</p>
+              <ul>
+                <li>État des lieux juridique des essences protégées</li>
+                <li>Inventaires fauniques et floristiques</li>
+                <li>Suivi d’habitats sensibles & plans de restauration</li>
+              </ul>
+            </article>
+            <article class="expert-card" data-animate>
+              <h3>Armand Ngoubou Ekia</h3>
+              <p class="role">Gestion des risques & sécurité industrielle</p>
+              <ul>
+                <li>Études de Danger (EDD) avancées</li>
+                <li>Plans d’urgence environnementale</li>
+                <li>Audit des installations majeures</li>
+              </ul>
+            </article>
+            <article class="expert-card" data-animate>
+              <h3>Hiche Nadette Lembé</h3>
+              <p class="role">Sociologue & ingénierie sociale</p>
+              <ul>
+                <li>Analyses des dynamiques communautaires</li>
+                <li>Médiation et acceptabilité des projets</li>
+                <li>Programmes de développement communautaire</li>
+              </ul>
+            </article>
+            <article class="expert-card" data-animate>
+              <h3>Magloir-Désiré Mounganga</h3>
+              <p class="role">Conseiller fiscalité verte & RSE</p>
+              <ul>
+                <li>Optimisation fiscale liée à l’environnement</li>
+                <li>Stratégies RSE pour secteurs extractifs</li>
+                <li>Dialogue avec les institutions publiques</li>
+              </ul>
+            </article>
+            <article class="expert-card" data-animate>
+              <h3>Nadine Ngayila</h3>
+              <p class="role">Formatrice senior & renforcement de capacités</p>
+              <ul>
+                <li>Conception de modules certifiants EIES, PGES</li>
+                <li>Ateliers de sensibilisation pour collectivités</li>
+                <li>Accompagnement des PME locales</li>
+              </ul>
+            </article>
+            <article class="expert-card" data-animate>
+              <h3>Fabre Anguilet</h3>
+              <p class="role">Consultant SIG & données environnementales</p>
+              <ul>
+                <li>Cartographie participative & SIG avancés</li>
+                <li>Indicateurs de suivi environnemental</li>
+                <li>Analyse des impacts cumulés multi-sites</li>
+              </ul>
+            </article>
+            <article class="expert-card" data-animate>
+              <h3>Zephirin Menie</h3>
+              <p class="role">Juriste comparatiste international</p>
+              <ul>
+                <li>Études comparatives Gabon & pays tropicaux</li>
+                <li>Veille réglementaire internationale</li>
+                <li>Rédaction de projets de lois & décrets</li>
+              </ul>
+            </article>
+            <article class="expert-card" data-animate>
+              <h3>Marie Paule</h3>
+              <p class="role">Spécialiste gouvernance environnementale</p>
+              <ul>
+                <li>Rédaction de guides et référentiels</li>
+                <li>Accompagnement des ministères & communes</li>
+                <li>Intégration des politiques nationales</li>
+              </ul>
+            </article>
+            <article class="expert-card" data-animate>
+              <h3>Colombe M.</h3>
+              <p class="role">Chargée de collecte & traitement de données</p>
+              <ul>
+                <li>Coordination d’enquêtes socio-environnementales</li>
+                <li>Qualité et traçabilité des données de terrain</li>
+                <li>Reporting ESG pour investisseurs</li>
+              </ul>
+            </article>
+          </div>
+
+        </div>
+      </section>
+
+      <section class="trusted" data-animate style="background: white;">
+        <div class="container">
+          <div class="grid grid-2" style="align-items: center;">
+            <div>
+              <span class="section-eyebrow">Ils nous font confiance</span>
+              <h2>Partenaire des acteurs majeurs</h2>
+              <p>
+                Nos interventions accompagnent ministères, opérateurs pétroliers et miniers, et bailleurs
+                internationaux.
+              </p>
+            </div>
+            <div class="trusted-logos grid grid-3" style="gap: 1rem;">
+              <!-- Placeholder logos styled as boxes -->
+              <div class="logo-card">Client A</div>
+              <div class="logo-card">Ministère</div>
+              <div class="logo-card">Énergie</div>
+              <div class="logo-card">Forêt</div>
+              <div class="logo-card">ONG</div>
+              <div class="logo-card">Bailleur</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="approche" class="approach bg-slice-reverse" data-animate>
+        <div class="container">
+          <div class="section-header">
+            <span class="section-eyebrow">Notre Méthode</span>
+            <h2>Une approche intégrée</h2>
+          </div>
+          <div class="grid grid-4 approach-steps">
+            <article class="card">
+              <span class="text-3xl font-bold text-primary mb-2 db">01</span>
+              <h3>Diagnostic</h3>
+              <p>État des lieux réglementaire et cadrage des enjeux.</p>
+            </article>
+            <article class="card">
+              <span class="text-3xl font-bold text-primary mb-2 db">02</span>
+              <h3>Co-conception</h3>
+              <p>Ateliers et scénarios d’action.</p>
+            </article>
+            <article class="card">
+              <span class="text-3xl font-bold text-primary mb-2 db">03</span>
+              <h3>Exécution</h3>
+              <p>Production de livrables opérationnels.</p>
+            </article>
+            <article class="card">
+              <span class="text-3xl font-bold text-primary mb-2 db">04</span>
+              <h3>Suivi</h3>
+              <p>Évaluation des impacts et amélioration.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="realisations" class="realisations" data-animate>
+        <div class="container">
+          <div class="section-header">
+            <span class="section-eyebrow">Références</span>
+            <h2>Des réalisations concrètes pour un impact durable</h2>
+            <p>
+              Quelques exemples de missions menées par nos équipes aux côtés des institutions et entreprises gabonaises.
+            </p>
+          </div>
+          <div class="realisations-grid">
+            <article data-animate>
+              <h3>Programme national REDD+</h3>
+              <p>Évaluation des risques socio-environnementaux et élaboration du plan de consultation des communautés.
+              </p>
+              <span>Livrables : PGES, cadre de gestion des plaintes, tableau de bord de suivi.</span>
+            </article>
+            <article data-animate>
+              <h3>Audit environnemental d’une mine d’or</h3>
+              <p>Audit de conformité, plan de mitigation des impacts et renforcement de capacités des équipes ESG.</p>
+              <span>Livrables : Rapport EDD, protocole d’urgence et formation des opérateurs.</span>
+            </article>
+            <article data-animate>
+              <h3>Déploiement de la fiscalité verte</h3>
+              <p>Étude comparative et recommandations pour l’implémentation de nouvelles mesures incitatives.</p>
+              <span>Livrables : Note de politique publique, matrices de scénarios fiscaux.</span>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="territory" data-animate>
+        <div class="container territory-content">
+          <div>
+            <span class="section-eyebrow">Ancrage terrain</span>
+            <h2>Présence sur l’ensemble du territoire gabonais</h2>
+            <p>
+              Nous intervenons dans les 9 provinces du Gabon, sur des projets forestiers, miniers,
+              pétroliers et ruraux. Notre connaissance fine des écosystèmes locaux garantit une approche
+              contextualisée et respectueuse des dynamiques communautaires.
+            </p>
+          </div>
+          <div class="territory-cards">
+            <article data-animate>
+              <div style="font-size: 1.5rem; color: var(--color-primary); margin-bottom: 0.5rem;"><i
+                  class="fas fa-tree"></i></div>
+              <h3>Zones forestières</h3>
+              <p>Gestion durable, surveillance des essences protégées et certification.</p>
+            </article>
+            <article data-animate>
+              <div style="font-size: 1.5rem; color: var(--color-primary); margin-bottom: 0.5rem;"><i
+                  class="fas fa-industry"></i></div>
+              <h3>Zones minières & pétrolières</h3>
+              <p>EDD, plans d’urgence, acceptabilité sociale et compliance ESG.</p>
+            </article>
+            <article data-animate>
+              <div style="font-size: 1.5rem; color: var(--color-primary); margin-bottom: 0.5rem;"><i
+                  class="fas fa-tractor"></i></div>
+              <h3>Territoires ruraux</h3>
+              <p>Appui aux collectivités, agriculture durable et projets REDD+.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta-section-updated" data-animate>
+        <div class="container">
+          <h2>Besoin d’un accompagnement environnemental de haut niveau&nbsp;?</h2>
+          <p>
+            Faites appel aux experts de Green Leaves Gabon pour sécuriser vos projets et accélérer votre
+            performance ESG dès aujourd’hui.
+          </p>
+          <a class="cta-btn primary" href="#contact">Parler à un expert</a>
+        </div>
+      </section>
+
+
+
+      <section id="contact" class="contact" data-animate>
+        <div class="container">
+          <div class="section-header">
+            <span class="section-eyebrow">Contact</span>
+            <h2>Partagez-nous vos enjeux</h2>
+            <p class="text-lead">
+              Nous répondons sous 48h pour organiser un échange avec l’expert adapté à vos besoins :
+              conformité juridique, études environnementales, climat, ingénierie sociale ou gouvernance.
+            </p>
+          </div>
+
+          <div class="contact-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; max-width: 880px; margin: 0 auto;">
+            <a href="mailto:Sabine-Anotho@greenleaves.ga"
+               class="contact-card"
+               style="display: flex; flex-direction: column; align-items: center; gap: 0.6rem; padding: 1.75rem 1.25rem; background: #ffffff; border: 1px solid rgba(34, 197, 94, 0.18); border-radius: 16px; box-shadow: 0 4px 14px rgba(15, 65, 30, 0.06); text-decoration: none; transition: transform 200ms ease, box-shadow 200ms ease;">
+              <span style="width: 48px; height: 48px; border-radius: 14px; background: #dcfce7; color: #15803d; display: inline-flex; align-items: center; justify-content: center; font-size: 1.25rem;"><i class="fas fa-envelope"></i></span>
+              <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: #6b7280; font-weight: 600;">Email</span>
+              <span style="font-size: 0.95rem; font-weight: 600; color: #14532d; text-align: center; word-break: break-all;">Sabine-Anotho@greenleaves.ga</span>
+            </a>
+
+            <a href="tel:+24105461625"
+               class="contact-card"
+               style="display: flex; flex-direction: column; align-items: center; gap: 0.6rem; padding: 1.75rem 1.25rem; background: #ffffff; border: 1px solid rgba(34, 197, 94, 0.18); border-radius: 16px; box-shadow: 0 4px 14px rgba(15, 65, 30, 0.06); text-decoration: none; transition: transform 200ms ease, box-shadow 200ms ease;">
+              <span style="width: 48px; height: 48px; border-radius: 14px; background: #dcfce7; color: #15803d; display: inline-flex; align-items: center; justify-content: center; font-size: 1.25rem;"><i class="fas fa-phone"></i></span>
+              <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: #6b7280; font-weight: 600;">Téléphone</span>
+              <span style="font-size: 1.05rem; font-weight: 600; color: #14532d;">+241 05 46 16 25</span>
+            </a>
+
+            <div class="contact-card"
+                 style="display: flex; flex-direction: column; align-items: center; gap: 0.6rem; padding: 1.75rem 1.25rem; background: #ffffff; border: 1px solid rgba(34, 197, 94, 0.18); border-radius: 16px; box-shadow: 0 4px 14px rgba(15, 65, 30, 0.06);">
+              <span style="width: 48px; height: 48px; border-radius: 14px; background: #dcfce7; color: #15803d; display: inline-flex; align-items: center; justify-content: center; font-size: 1.25rem;"><i class="fas fa-location-dot"></i></span>
+              <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: #6b7280; font-weight: 600;">Adresse</span>
+              <span style="font-size: 1.05rem; font-weight: 600; color: #14532d;">Libreville, Gabon</span>
+            </div>
+          </div>
+        </div>
+      </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <div class="footer-brand">
+        <img src="Gemini_Generated_Image_5rybu05rybu05ryb.png" alt="Logo" class="footer-logo-img" />
+        <span style="font-weight: 700;">Green Leaves Gabon</span>
+      </div>
+
+      <nav class="footer-links">
+        <a href="#services">Services</a>
+        <a href="#experts">Experts</a>
+        <a href="#formations-detail">Formations</a>
+        <a href="#approche">Approche</a>
+        <a href="#contact">Contact</a>
+      </nav>
+
+      <div class="footer-meta">
+        © <span id="year"></span> Green Leaves Gabon
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    /* Photos script removed as photos are removed */
+
+    const navToggle = document.querySelector(".nav-toggle");
+    const siteNav = document.getElementById("site-nav");
+
+    navToggle.addEventListener("click", () => {
+      const expanded = navToggle.getAttribute("aria-expanded") === "true" || false;
+      navToggle.setAttribute("aria-expanded", !expanded);
+      document.body.classList.toggle("nav-open");
+    });
+
+    document.querySelectorAll(".main-nav a").forEach((link) => {
+      link.addEventListener("click", () => {
+        document.body.classList.remove("nav-open");
+        navToggle.setAttribute("aria-expanded", "false");
+      });
+    });
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    document.querySelectorAll("[data-animate]").forEach((el) => observer.observe(el));
+
+    /* Scroll Spy / Active Nav Link */
+    const sections = document.querySelectorAll("section[id]");
+    const navLinks = document.querySelectorAll(".main-nav a");
+
+    const scrollObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.getAttribute("id");
+          navLinks.forEach(link => link.classList.remove("active"));
+          const activeLink = document.querySelector(`.main-nav a[href="#${id}"]`);
+          if (activeLink) {
+            activeLink.classList.add("active");
+          }
+        }
+      });
+    }, {
+      rootMargin: "-20% 0px -75% 0px", /* Highlights when top of section is near viewport top */
+      threshold: 0
+    });
+
+    sections.forEach(section => {
+      scrollObserver.observe(section);
+    });
+  </script>
+</body>
+
+</html>

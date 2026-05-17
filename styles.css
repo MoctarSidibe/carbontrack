@@ -1,0 +1,1197 @@
+/* ===================================
+   Green Leaves Gabon - Pro Design 2026
+   Theme: White & Green Slices
+   =================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* --- Color Palette --- */
+  /* Primary Greens */
+  --color-primary: #198754;
+  /* Vibrant Professional Green */
+  --color-primary-dark: #146c43;
+  --color-primary-light: #d1e7dd;
+
+  /* Secondary / Accents */
+  --color-secondary: #20c997;
+  /* Teal-ish green for vibrancy */
+  --color-accent: #0f5132;
+  /* Deep forest green */
+
+  /* Neutrals (The "White" Base) */
+  --color-white: #ffffff;
+  --color-off-white: #f8f9fa;
+  /* Ultra light gray for section differentiation */
+  --color-gray-100: #e9ecef;
+  --color-gray-200: #dee2e6;
+  --color-gray-500: #adb5bd;
+  --color-gray-700: #495057;
+  --color-text-body: #212529;
+  /* Dark gray for readability */
+  --color-text-heading: #0b2518;
+  /* Almost black green */
+
+  /* --- Typography --- */
+  --font-main: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+  --text-5xl: 3.5rem;
+
+  /* --- Spacing --- */
+  --space-xs: 0.5rem;
+  /* 8px */
+  --space-sm: 1rem;
+  /* 16px */
+  --space-md: 1.5rem;
+  /* 24px */
+  --space-lg: 2.5rem;
+  /* 40px */
+  --space-xl: 4rem;
+  /* 64px */
+  --space-2xl: 6rem;
+  /* 96px */
+
+  /* --- Layout --- */
+  --container-width: 1280px;
+  --radius-sm: 4px;
+  --radius-md: 12px;
+  --radius-lg: 24px;
+  --radius-pill: 50px;
+
+  /* --- Shadows --- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.05);
+  --shadow-hover: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* ===================================
+   Reset & Base
+   =================================== */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--color-white);
+  color: var(--color-text-body);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+  height: auto;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+ul {
+  list-style: none;
+}
+
+/* ===================================
+   Typography Styles
+   =================================== */
+h1,
+h2,
+h3,
+h4 {
+  color: var(--color-text-heading);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: clamp(2.5rem, 5vw, var(--text-5xl));
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-md);
+}
+
+h2 {
+  font-size: clamp(2rem, 4vw, var(--text-4xl));
+  margin-bottom: var(--space-sm);
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: var(--text-xl);
+  margin-bottom: var(--space-xs);
+  font-weight: 700;
+}
+
+p {
+  margin-bottom: var(--space-sm);
+  max-width: 65ch;
+}
+
+.text-lead {
+  font-size: var(--text-lg);
+  color: var(--color-gray-700);
+}
+
+.section-eyebrow {
+  text-transform: uppercase;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--color-primary);
+  display: inline-block;
+  margin-bottom: var(--space-xs);
+  background: var(--color-primary-light);
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+}
+
+/* ===================================
+   Layout Helpers
+   =================================== */
+/* ===================================
+   Layout Helpers & Grid System
+   =================================== */
+.container {
+  max-width: var(--container-width);
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+  position: relative;
+  z-index: 2;
+}
+
+/* Mobile First Grid: Default is 1 column */
+.grid {
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Visibility Utilities */
+.desktop-only {
+  display: none !important;
+}
+
+@media (min-width: 900px) {
+  .desktop-only {
+    display: inline-flex !important;
+  }
+}
+
+section {
+  padding: var(--space-xl) 0;
+  position: relative;
+}
+
+/* ===================================
+   The "Green Slice" Background
+   =================================== */
+.bg-slice-green {
+  background: var(--color-primary-dark);
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+  color: var(--color-white);
+  padding-bottom: 8vw;
+  clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
+  /* Adjusted angle for mobile */
+}
+
+@media (min-width: 768px) {
+  .bg-slice-green {
+    clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+  }
+}
+
+/* ... (Skip button styles) ... */
+
+/* ===================================
+   Header & Navigation
+   =================================== */
+/* Consolidating Navigation Styles */
+.site-header .container {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+/* --- Mobile Navigation (Default) --- */
+.nav-toggle {
+  display: block;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  z-index: 1001;
+}
+
+.nav-toggle-bar {
+  display: block;
+  width: 25px;
+  height: 3px;
+  background-color: var(--color-primary);
+  margin: 5px 0;
+  transition: all 0.3s ease;
+}
+
+/* Mobile Menu: Hidden by default, absolute positioning */
+.main-nav {
+  display: none;
+  flex-direction: column;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--color-white);
+  padding: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-top: 1px solid var(--color-gray-100);
+  border-bottom: 4px solid var(--color-secondary);
+  z-index: 1000;
+}
+
+.main-nav a {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-gray-100);
+  display: block;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--color-text-body);
+}
+
+.main-nav a:hover,
+.main-nav a.active {
+  color: var(--color-primary);
+  background: var(--color-off-white);
+  font-weight: 700;
+  /* Bolder for active state */
+}
+
+/* Desktop specific active style */
+@media (min-width: 900px) {
+  .main-nav a.active {
+    background: transparent;
+    position: relative;
+  }
+
+  .main-nav a.active::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--color-secondary);
+  }
+}
+
+/* Mobile Menu Active State (Toggled by JS class on body) */
+body.nav-open .main-nav {
+  display: flex;
+  animation: slideDown 0.3s ease-out forwards;
+}
+
+/* Hamburger Animation State */
+body.nav-open .nav-toggle .nav-toggle-bar:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+
+body.nav-open .nav-toggle .nav-toggle-bar:nth-child(2) {
+  opacity: 0;
+}
+
+body.nav-open .nav-toggle .nav-toggle-bar:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
+}
+
+/* --- Desktop Navigation (min-width: 900px) --- */
+@media (min-width: 900px) {
+  .nav-toggle {
+    display: none;
+    /* Hide hamburger */
+  }
+
+  .main-nav {
+    display: flex;
+    /* Always visible */
+    position: static;
+    flex-direction: row;
+    background: transparent;
+    box-shadow: none;
+    border: none;
+    padding: 0;
+    gap: 1.5rem;
+    animation: none;
+  }
+
+  body.nav-open .main-nav {
+    animation: none;
+    /* No slide down on desktop if class sticks */
+  }
+
+  .main-nav a {
+    border: none;
+    padding: 0;
+    font-size: 0.95rem;
+  }
+
+  .main-nav a:hover {
+    background: transparent;
+    color: var(--color-primary);
+  }
+}
+
+/* ===================================
+   Hero Section
+   =================================== */
+.hero {
+  padding-top: 1.5rem;
+  /* Ultra tight */
+  text-align: center;
+}
+
+.hero h1 {
+  margin-top: 2;
+}
+
+.hero p {
+  font-size: 1.125rem;
+}
+
+.hero-stats {
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .hero {
+    text-align: left;
+    padding-top: 2.5rem;
+    /* Ultra tight for desktop */
+  }
+
+  .hero-stats {
+    justify-content: flex-start;
+  }
+}
+
+/* ===================================
+   Footer (Responsive)
+   =================================== */
+.footer-content {
+  display: flex;
+  flex-direction: column;
+  /* Stack on mobile */
+  align-items: center;
+  gap: 2rem;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .footer-content {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+    gap: 1.5rem;
+  }
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .footer-links {
+    gap: 1.5rem;
+  }
+}
+
+section {
+  padding: var(--space-xl) 0;
+  position: relative;
+}
+
+/* ===================================
+   The "Green Slice" Background
+   =================================== */
+/* Used for Hero, CTA, or special sections. 
+   Creates a diagonal background shape. */
+.bg-slice-green {
+  background: var(--color-primary-dark);
+  /* Fallback */
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+  color: var(--color-white);
+  padding-bottom: 8vw;
+  /* Extra space for the slant */
+  clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+}
+
+.bg-slice-reverse {
+  background: var(--color-off-white);
+  position: relative;
+  margin-top: -5vw;
+  padding-top: 10vw;
+  /* z-index adjustment */
+}
+
+.slice-bottom-right {
+  position: relative;
+  overflow: hidden;
+}
+
+.slice-bottom-right::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: var(--color-off-white);
+  z-index: 0;
+  transform: skewY(-3deg);
+  transform-origin: top left;
+}
+
+/* ===================================
+   Components
+   =================================== */
+
+/* Buttons */
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2rem;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-size: var(--text-base);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.cta-btn.primary {
+  background: var(--color-primary);
+  color: var(--color-white);
+  box-shadow: 0 4px 15px rgba(25, 135, 84, 0.3);
+}
+
+.cta-btn.primary:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(25, 135, 84, 0.4);
+}
+
+.cta-btn.ghost {
+  background: transparent;
+  color: var(--color-white);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.cta-btn.ghost:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--color-white);
+}
+
+.cta-btn.secondary {
+  background: var(--color-white);
+  color: var(--color-primary);
+  border: 2px solid var(--color-border);
+}
+
+/* Cards */
+.card {
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid var(--color-gray-100);
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--color-primary-light);
+}
+
+/* ===================================
+   Header & Navigation
+   =================================== */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  /* Removed border-bottom in favor of the color strip */
+  padding: var(--space-sm) 0;
+}
+
+/* Gabon Color Strip (Bottom of Header) */
+.site-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(to right,
+      #009E60 0%, #009E60 33%,
+      #FCD116 33%, #FCD116 66%,
+      #3A75C4 66%, #3A75C4 100%);
+}
+
+.site-header .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.branding {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo-img {
+  height: 50px;
+  width: auto;
+}
+
+.logo-text .logo {
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: var(--color-primary-dark);
+}
+
+.tagline {
+  font-size: 0.75rem;
+  color: var(--color-gray-500);
+}
+
+.main-nav {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .main-nav {
+    display: flex;
+    gap: 1.5rem;
+    /* Reduced from default var(--space-md) */
+    align-items: center;
+  }
+}
+
+.main-nav a {
+  font-weight: 600;
+  color: var(--color-text-body);
+  position: relative;
+  font-size: 0.95rem;
+  /* Slightly reduced font size */
+}
+
+.main-nav a:hover,
+.main-nav a.active {
+  color: var(--color-primary);
+}
+
+/* Compact Brand */
+.branding {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.branding .logo {
+  font-size: 1.25rem;
+  /* Compact logo text */
+}
+
+/* Ensure header doesn't get too tall */
+.site-header .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+/* ===================================
+   Hero Section Matches "Slice"
+   =================================== */
+.hero {
+  /* Using the slice background utility directly in CSS for hero */
+  background: linear-gradient(120deg, var(--color-accent) 0%, var(--color-primary) 100%);
+  color: var(--color-white);
+  padding-top: calc(var(--space-2xl) + 2rem);
+  padding-bottom: var(--space-2xl);
+  clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
+  /* The Green Slice */
+  margin-bottom: 0;
+  /* Removing negative margin to prevent overlap issues if spacing is tight */
+  padding-bottom: var(--space-xl);
+}
+
+.hero p {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: var(--text-xl);
+}
+
+.hero-stats {
+  margin-top: var(--space-xl);
+  display: flex;
+  gap: var(--space-xl);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding-top: var(--space-md);
+}
+
+.hero-stats div strong {
+  display: block;
+  font-size: 2.5rem;
+  color: var(--color-secondary);
+}
+
+.hero-stats div span {
+  font-size: 0.875rem;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ===================================
+   Highlights (Floating Cards)
+   =================================== */
+.highlights {
+  padding-top: 0;
+  padding-bottom: var(--space-xl);
+  margin-top: 0;
+  z-index: 10;
+}
+
+.highlight-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-md);
+  margin-top: 2rem;
+}
+
+.highlight-grid article {
+  background: var(--color-white);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  /* Lifted look */
+  border-top: 4px solid var(--color-secondary);
+}
+
+/* ===================================
+   Services (Clean White)
+   =================================== */
+.services {
+  background-color: var(--color-off-white);
+}
+
+.service-card h3 {
+  color: var(--color-primary-dark);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.service-card h3 i {
+  color: var(--color-secondary);
+}
+
+.service-card li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-gray-700);
+}
+
+.service-card li::before {
+  content: "→";
+  color: var(--color-primary);
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+}
+
+/* ===================================
+   Experts (Grid)
+   =================================== */
+.experts {
+  background: var(--color-white);
+}
+
+.expert-card {
+  background: var(--color-white);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-gray-200);
+  border-left: 4px solid var(--color-primary);
+  /* Accent line instead of photo */
+  transition: all 0.2s ease;
+  height: 100%;
+}
+
+.expert-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--color-primary);
+}
+
+.expert-card h3 {
+  font-size: 1.125rem;
+  margin-bottom: 0.25rem;
+  color: var(--color-text-heading);
+}
+
+.expert-card .role {
+  color: var(--color-secondary);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.expert-card ul {
+  margin-top: 0.5rem;
+}
+
+.expert-card li {
+  font-size: 0.9rem;
+  color: var(--color-gray-700);
+  margin-bottom: 0.25rem;
+  padding-left: 1rem;
+  position: relative;
+}
+
+.expert-card li::before {
+  content: "•";
+  color: var(--color-secondary);
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+}
+
+/* ===================================
+   Territory (Green Slice Reverse)
+   =================================== */
+.territory {
+  background: var(--color-off-white);
+  color: var(--color-text-body);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Subtle map pattern background */
+.territory::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(var(--color-gray-200) 1px, transparent 1px);
+  background-size: 20px 20px;
+  opacity: 0.5;
+  z-index: 0;
+}
+
+.territory-content {
+  position: relative;
+  z-index: 2;
+}
+
+.territory-content h2,
+.territory-content h3 {
+  color: var(--color-text-heading);
+}
+
+.territory-content p {
+  color: var(--color-text-body);
+}
+
+/* ===================================
+   Signature & Experts Spacing
+   =================================== */
+.signature {
+  padding-bottom: var(--space-md);
+  /* Reduced from default xl */
+}
+
+.experts {
+  padding-top: var(--space-md);
+  /* Reduced from default xl */
+}
+
+.territory-cards article {
+  background: var(--color-white);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-gray-200);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.territory-cards article:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--color-primary);
+}
+
+/* Add a colored accent bar to the cards */
+.territory-cards article::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--color-secondary);
+}
+
+/* ===================================
+   CTA Banner
+   =================================== */
+/* ===================================
+   Formations Section
+   =================================== */
+.formations {
+  background: var(--color-white);
+  padding-bottom: var(--space-2xl);
+  /* Extra space before signature */
+}
+
+.formation-featured-card {
+  border-left: 4px solid var(--color-secondary);
+  grid-column: 1 / -1;
+  background: var(--color-white);
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-gray-200);
+}
+
+.formation-module-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .formation-module-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.formation-module {
+  background: var(--color-off-white);
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+}
+
+.formation-module h4 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-primary);
+}
+
+.formation-module p {
+  font-size: 0.9rem;
+  margin: 0;
+  color: var(--color-gray-700);
+}
+
+/* ===================================
+   CTA Banner (Enhanced)
+   =================================== */
+.cta-section-updated {
+  background: var(--color-primary-light);
+  /* "Slight green" */
+  text-align: center;
+  padding: var(--space-lg) var(--space-md) var(--space-md);
+  /* Balanced padding */
+  position: relative;
+}
+
+.cta-section-updated h2 {
+  color: var(--color-primary-dark);
+  font-size: 1.5rem !important;
+  /* Forces 24px - kept small */
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.4;
+}
+
+.cta-section-updated p {
+  color: var(--color-text-body);
+  font-size: 1rem;
+  max-width: 600px;
+  margin: 0 auto 1.5rem;
+  opacity: 0.9;
+}
+
+
+
+/* ===================================
+   Contact Section
+   =================================== */
+/* ===================================
+   Contact Section
+   =================================== */
+.contact {
+  background: var(--color-white);
+  padding-top: var(--space-md);
+  padding-bottom: 0;
+  /* Zero padding */
+}
+
+.contact-grid {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.contact form {
+  margin-bottom: 0 !important;
+}
+
+.disclaimer {
+  font-size: 0.8rem;
+  color: var(--color-gray-500);
+  margin-bottom: 0 !important;
+  margin-top: 1rem;
+  line-height: 1.2;
+  display: block;
+  /* Ensure it behaves as a block to respect margins */
+}
+
+.disclaimer {
+  font-size: 0.8rem;
+  color: var(--color-gray-500);
+  margin-bottom: 0 !important;
+  /* Force remove margin */
+  margin-top: 1rem;
+}
+
+/* ===================================
+   Forms
+   =================================== */
+.form-group label {
+  display: block;
+  font-weight: 700;
+  color: var(--color-text-heading);
+  margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* ===================================
+   Footer (Compact & Horizontal)
+   =================================== */
+.site-footer {
+  background: var(--color-primary-dark);
+  color: var(--color-white);
+  padding: 0.5rem 0 1.5rem;
+  /* Absolute minimum padding */
+  margin-top: 0;
+  font-size: 0.9rem;
+  position: relative;
+  /* For the strip positioning */
+}
+
+/* Gabon Color Strip (Top of Footer) */
+.site-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(to right,
+      #009E60 0%, #009E60 33%,
+      #FCD116 33%, #FCD116 66%,
+      #3A75C4 66%, #3A75C4 100%);
+}
+
+.footer-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .footer-content {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+  }
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.footer-logo-img {
+  height: 30px;
+  /* Small logo */
+  width: auto;
+  filter: brightness(0) invert(1);
+  /* Make it white if it's not transparent/white already */
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.footer-links a {
+  color: rgba(255, 255, 255, 0.8);
+  transition: color 0.2s;
+}
+
+.footer-links a:hover {
+  color: var(--color-white);
+  text-decoration: none;
+}
+
+.footer-meta {
+  margin-top: 0;
+  /* Inline with others in desktop */
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+
+/* ===================================
+   Applications Section
+   =================================== */
+.applications {
+  padding-bottom: var(--space-2xl);
+}
+
+.app-card {
+  background: var(--color-white);
+  padding: var(--space-xl);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-gray-200);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.app-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--color-primary);
+}
+
+.app-icon {
+  font-size: 3rem;
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
+  background: var(--color-primary-light);
+  width: 80px;
+  height: 80px;
+  line-height: 80px;
+  border-radius: 50%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.app-card h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: var(--color-primary-dark);
+}
+
+.app-card p {
+  color: var(--color-gray-700);
+  margin-bottom: 0;
+}
+
+/* Coming Soon Badge */
+.badge-coming-soon {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--color-secondary);
+  color: var(--color-primary-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-pill);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* End of Styles */
