@@ -13,13 +13,13 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://carbontrack.africa"
+        "EXPO_PUBLIC_API_URL": "https://carbontrack.greenleaves.ga"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://carbontrack.africa"
+        "EXPO_PUBLIC_API_URL": "https://carbontrack.greenleaves.ga"
       }
     }
   },
