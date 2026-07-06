@@ -36,6 +36,7 @@ export const PORTAL_COOKIE = {
   admin:  'adm_token',
   expert: 'exp_token',
   user:   'token',
+  cnc:    'cnc_token',
 } as const
 
 type Portal = keyof typeof PORTAL_COOKIE

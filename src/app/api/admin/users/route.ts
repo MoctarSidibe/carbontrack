@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Tous les champs obligatoires doivent Ãªtre remplis' }, { status: 400 })
     }
 
-    if (!['user', 'admin'].includes(role)) {
+    if (!['user', 'admin', 'expert', 'cnc'].includes(role)) {
       return NextResponse.json({ error: 'RÃ´le invalide' }, { status: 400 })
     }
 

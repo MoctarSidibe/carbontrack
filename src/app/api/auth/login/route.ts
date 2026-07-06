@@ -52,7 +52,9 @@ export async function POST(request: NextRequest) {
     // Each role gets its own cookie — and we CLEAR the other portals' cookies so
     // stale tokens from previous sessions never contaminate cross-portal reads.
     const cookieName = user.role === 'admin'  ? PORTAL_COOKIE.admin  :
-                       user.role === 'expert' ? PORTAL_COOKIE.expert : PORTAL_COOKIE.user
+                       user.role === 'expert' ? PORTAL_COOKIE.expert :
+                       user.role === 'cnc'    ? PORTAL_COOKIE.cnc    :
+                       PORTAL_COOKIE.user
 
     const cookieOpts = {
       httpOnly: true,

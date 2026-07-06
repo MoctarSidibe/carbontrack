@@ -6,7 +6,7 @@ import {
   CheckCircle, XCircle, FileText, Building2, Calendar,
   AlertCircle, ChevronDown, ChevronUp, Award, TrendingUp, BarChart3,
   Layers, ListChecks, ShieldCheck, AlertTriangle, Info,
-  User, Clock, X, Download, FileCheck,
+  User, Clock, X, Download, FileCheck, Landmark,
 } from 'lucide-react'
 import InspectionCard from '@/components/InspectionCard'
 import CertEmissionCharts from '@/components/CertEmissionCharts'
@@ -51,6 +51,13 @@ interface CertDetail {
   avisNumber: string | null; avisDate: string | null; avisPdfUrl: string | null
   avisPeriodStart: number | null; avisPeriodEnd: number | null; avisTotalCo2eq: number | null
   expertReportPdfUrl: string | null; dossierCompiledAt: string | null
+  cncUserId: number | null
+  submittedToCncAt: string | null
+  cncReviewedAt: string | null
+  cncNotes: string | null
+  cncCertificatePdfUrl: string | null
+  cncCertificateGeneratedAt: string | null
+  cncCertificateNumber: string | null
   certifiedAt: string | null; certificateNumber: string | null
   rejectionReason: string | null; adminNotes: string | null; companyMessage: string | null
   expertName: string | null; expertEmail: string | null; expertUserId: number | null
@@ -87,20 +94,24 @@ const CAT_LABELS: Record<string, string> = {
 }
 
 const STATUS_LABELS: Record<string, { label: string; cls: string; icon: React.ReactNode }> = {
-  pending:    { label: 'En attente',           cls: 'bg-yellow-500/20 text-yellow-400',  icon: <Clock className="w-3.5 h-3.5" /> },
-  assigned:   { label: 'Expert assigné',        cls: 'bg-blue-500/20 text-blue-400',     icon: <User className="w-3.5 h-3.5" /> },
-  in_progress:{ label: "En cours d'inspection", cls: 'bg-violet-500/20 text-violet-400', icon: <AlertCircle className="w-3.5 h-3.5" /> },
-  audit_done: { label: 'Audit finalisé',         cls: 'bg-teal-500/20 text-teal-400',    icon: <FileCheck className="w-3.5 h-3.5" /> },
-  certified:  { label: 'Certifié',              cls: 'bg-green-500/20 text-green-400',   icon: <CheckCircle className="w-3.5 h-3.5" /> },
-  rejected:   { label: 'Rejeté',               cls: 'bg-red-500/20 text-red-400',        icon: <XCircle className="w-3.5 h-3.5" /> },
+  pending:              { label: 'En attente',           cls: 'bg-yellow-500/20 text-yellow-400',    icon: <Clock className="w-3.5 h-3.5" /> },
+  assigned:             { label: 'Expert assigné',        cls: 'bg-blue-500/20 text-blue-400',       icon: <User className="w-3.5 h-3.5" /> },
+  in_progress:          { label: "En cours d'inspection", cls: 'bg-violet-500/20 text-violet-400',   icon: <AlertCircle className="w-3.5 h-3.5" /> },
+  audit_done:           { label: 'Audit finalisé',         cls: 'bg-teal-500/20 text-teal-400',      icon: <FileCheck className="w-3.5 h-3.5" /> },
+  certified:            { label: 'Certifié GreenLeaves',  cls: 'bg-green-500/20 text-green-400',     icon: <CheckCircle className="w-3.5 h-3.5" /> },
+  submitted_to_cnc:     { label: 'Soumis au CNC',         cls: 'bg-amber-500/20 text-amber-400',    icon: <Clock className="w-3.5 h-3.5" /> },
+  certificate_generated:{ label: 'Certificat CNC émis',   cls: 'bg-emerald-500/20 text-emerald-400', icon: <Award className="w-3.5 h-3.5" /> },
+  rejected:             { label: 'Rejeté',                 cls: 'bg-red-500/20 text-red-400',        icon: <XCircle className="w-3.5 h-3.5" /> },
 }
 
 const WORKFLOW_STEPS = [
-  { key: 'pending',     label: 'Demande' },
-  { key: 'assigned',    label: 'Expert' },
-  { key: 'in_progress', label: 'Inspection' },
-  { key: 'audit_done',  label: 'Audit' },
-  { key: 'certified',   label: 'Certifié' },
+  { key: 'pending',              label: 'Demande' },
+  { key: 'assigned',             label: 'Expert' },
+  { key: 'in_progress',          label: 'Inspection' },
+  { key: 'audit_done',           label: 'Audit' },
+  { key: 'certified',            label: 'Certifié' },
+  { key: 'submitted_to_cnc',     label: 'CNC' },
+  { key: 'certificate_generated', label: 'Certificat' },
 ]
 
 // ─── Pre-validation ───────────────────────────────────────────────────────────
@@ -211,11 +222,13 @@ export default function AdminCertDetailPage() {
   const [openScope, setOpenScope] = useState<number | null>(null)
 
   // Modal state
-  const [modalMode, setModalMode] = useState<'assign' | 'reject' | 'notes' | 'certify' | null>(null)
+  const [modalMode, setModalMode] = useState<'assign' | 'reject' | 'notes' | 'certify' | 'send_to_cnc' | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [modalError, setModalError] = useState('')
   const [generatingPdf, setGeneratingPdf] = useState<string | null>(null)
   const [experts, setExperts] = useState<{ id: number; firstName: string; lastName: string; email: string }[]>([])
+  const [cncUsers, setCncUsers] = useState<{ id: number; firstName: string; lastName: string; email: string }[]>([])
+  const [cncUserId, setCncUserId] = useState('')
   const [expertUserId, setExpertUserId] = useState('')
   const [inspectionDate, setInspectionDate] = useState('')
   const [adminNotes, setAdminNotes] = useState('')
@@ -233,6 +246,10 @@ export default function AdminCertDetailPage() {
     fetch('/api/admin/experts?limit=100')
       .then(r => r.json())
       .then(data => setExperts(data.experts || []))
+      .catch(() => {})
+    fetch('/api/admin/users?role=cnc&limit=100')
+      .then(r => r.json())
+      .then(data => setCncUsers(data.users || []))
       .catch(() => {})
   }, [params.id])
 
@@ -259,6 +276,9 @@ export default function AdminCertDetailPage() {
       body = { action: 'notes', adminNotes }
     } else if (modalMode === 'certify') {
       body = { action: 'certify', adminNotes }
+    } else if (modalMode === 'send_to_cnc') {
+      if (!cncUserId) { setSubmitting(false); setModalError('Sélectionnez un membre CNC.'); return }
+      body = { action: 'send_to_cnc', cncUserId: parseInt(cncUserId), adminNotes }
     }
     try {
       const res = await fetch(`/api/admin/certifications/${cert.id}`, {
@@ -377,10 +397,31 @@ export default function AdminCertDetailPage() {
         <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 flex items-center gap-3">
           <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
           <div>
-            <p className="text-sm font-bold text-green-400">Bilan certifié</p>
+            <p className="text-sm font-bold text-green-400">Bilan certifié GreenLeaves</p>
             <p className="text-xs text-green-500 mt-0.5">
               {fmtDate(cert.certifiedAt)}{cert.certificateNumber && ` · Certificat n° ${cert.certificateNumber}`}{cert.expertName && ` · Par ${cert.expertName}`}
             </p>
+          </div>
+        </div>
+      )}
+      {['submitted_to_cnc', 'certificate_generated'].includes(cert.status) && (
+        <div className={`${cert.status === 'certificate_generated' ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-amber-500/10 border-amber-500/30'} border rounded-xl p-4 flex items-center gap-3`}>
+          <Landmark className="w-5 h-5 text-amber-400 flex-shrink-0" />
+          <div>
+            <p className={`text-sm font-bold ${cert.status === 'certificate_generated' ? 'text-emerald-400' : 'text-amber-400'}`}>
+              {cert.status === 'certificate_generated' ? 'Certificat CNC émis' : 'Soumis au Conseil National du Climat'}
+            </p>
+            <p className={`text-xs mt-0.5 ${cert.status === 'certificate_generated' ? 'text-emerald-400/80' : 'text-amber-400/80'}`}>
+              {cert.submittedToCncAt && `Soumis le ${fmtDate(cert.submittedToCncAt)}`}
+              {cert.cncCertificateNumber && ` · Certificat CNC N° ${cert.cncCertificateNumber}`}
+              {cert.cncCertificateGeneratedAt && ` · Émis le ${fmtDate(cert.cncCertificateGeneratedAt)}`}
+              {cert.cncCertificatePdfUrl && (
+                <a href={cert.cncCertificatePdfUrl} target="_blank" className="ml-2 underline hover:text-emerald-300">
+                  Télécharger
+                </a>
+              )}
+            </p>
+            {cert.cncNotes && <p className="text-xs text-gray-400 mt-1"><span className="text-gray-500">Notes CNC : </span>{cert.cncNotes}</p>}
           </div>
         </div>
       )}
@@ -410,6 +451,13 @@ export default function AdminCertDetailPage() {
             <button onClick={() => openModal('certify')}
               className="text-xs text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-1.5 rounded-lg transition-colors font-medium">
               Certifier le bilan
+            </button>
+          )}
+          {/* Send to CNC — only when certified */}
+          {cert.status === 'certified' && (
+            <button onClick={() => openModal('send_to_cnc')}
+              className="text-xs text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-3 py-1.5 rounded-lg transition-colors font-medium">
+              Envoyer au CNC
             </button>
           )}
           {/* Expert report PDF */}
@@ -894,10 +942,11 @@ export default function AdminCertDetailPage() {
           <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-5 border-b border-gray-700 sticky top-0 bg-gray-900 z-10">
               <h2 className="text-lg font-bold text-white">
-                {modalMode === 'assign'  && 'Assigner un expert'}
-                {modalMode === 'reject'  && 'Rejeter la demande'}
-                {modalMode === 'notes'   && 'Notes administrateur'}
-                {modalMode === 'certify' && 'Certifier le bilan'}
+                {modalMode === 'assign'       && 'Assigner un expert'}
+                {modalMode === 'reject'       && 'Rejeter la demande'}
+                {modalMode === 'notes'        && 'Notes administrateur'}
+                {modalMode === 'certify'      && 'Certifier le bilan'}
+                {modalMode === 'send_to_cnc'  && 'Envoyer au CNC'}
               </h2>
               <button onClick={() => setModalMode(null)} className="p-1.5 text-gray-400 hover:text-white">
                 <X className="w-5 h-5" />
@@ -940,6 +989,33 @@ export default function AdminCertDetailPage() {
                     <textarea value={adminNotes} onChange={e => setAdminNotes(e.target.value)} rows={3}
                       className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-brand-500 resize-none"
                       placeholder="Notes internes..." />
+                  </div>
+                </>
+              )}
+
+              {modalMode === 'send_to_cnc' && (
+                <>
+                  <div>
+                    <label className="block text-sm text-gray-300 mb-1.5">Membre CNC *</label>
+                    {cncUsers.length === 0 ? (
+                      <p className="text-sm text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2.5">
+                        Aucun membre CNC enregistré. Créez-en un dans la section <strong>Utilisateurs</strong>.
+                      </p>
+                    ) : (
+                      <select value={cncUserId} onChange={e => setCncUserId(e.target.value)}
+                        className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-500">
+                        <option value="">Sélectionner un membre CNC...</option>
+                        {cncUsers.map(cnc => (
+                          <option key={cnc.id} value={cnc.id}>{cnc.firstName} {cnc.lastName} ({cnc.email})</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-300 mb-1.5">Notes admin (jointes au dossier)</label>
+                    <textarea value={adminNotes} onChange={e => setAdminNotes(e.target.value)} rows={3}
+                      className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-500 resize-none"
+                      placeholder="Notes transmises au CNC..." />
                   </div>
                 </>
               )}
@@ -1002,9 +1078,10 @@ export default function AdminCertDetailPage() {
                   ${modalMode === 'reject' ? 'bg-red-600 hover:bg-red-700' : modalMode === 'certify' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-brand-600 hover:bg-brand-700'}`}
               >
                 {submitting ? 'En cours...' :
-                  modalMode === 'assign'  ? 'Assigner' :
-                  modalMode === 'reject'  ? 'Rejeter' :
-                  modalMode === 'certify' ? 'Certifier le bilan' :
+                  modalMode === 'assign'       ? 'Assigner' :
+                  modalMode === 'reject'       ? 'Rejeter' :
+                  modalMode === 'certify'      ? 'Certifier le bilan' :
+                  modalMode === 'send_to_cnc'  ? 'Envoyer au CNC' :
                   'Sauvegarder'}
               </button>
             </div>

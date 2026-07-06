@@ -9,11 +9,13 @@ const COOKIE = {
   admin:  'adm_token',
   expert: 'exp_token',
   user:   'token',
+  cnc:    'cnc_token',
 }
 
 function roleHome(role: unknown) {
   if (role === 'admin') return '/admin'
   if (role === 'expert') return '/expert'
+  if (role === 'cnc') return '/cnc'
   return '/dashboard'
 }
 
@@ -61,13 +63,30 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // ── Dashboard: redirect admins/experts to their portal ───────────────────
+  // ── CNC routes (except /cnc/login) ─────────────────────────────────────
+  if (pathname.startsWith('/cnc') && !pathname.startsWith('/cnc/login')) {
+    const token = request.cookies.get(COOKIE.cnc)?.value
+    if (!token) return NextResponse.redirect(new URL('/cnc/login', request.url))
+    const role = await verifyRole(token)
+    if (role !== 'cnc') return NextResponse.redirect(new URL('/cnc/login', request.url))
+  }
+
+  // ── Already-logged-in CNC visits /cnc/login → skip to /cnc ──────────────
+  if (pathname.startsWith('/cnc/login')) {
+    const token = request.cookies.get(COOKIE.cnc)?.value
+    if (token && (await verifyRole(token)) === 'cnc') {
+      return NextResponse.redirect(new URL('/cnc', request.url))
+    }
+  }
+
+  // ── Dashboard: redirect admins/experts/cnc to their portal ────────────────
   if (pathname === '/dashboard' || pathname.startsWith('/dashboard/') || pathname === '/subscription') {
     const token = request.cookies.get(COOKIE.user)?.value
     if (token) {
       const role = await verifyRole(token)
       if (role === 'expert') return NextResponse.redirect(new URL('/expert', request.url))
       if (role === 'admin')  return NextResponse.redirect(new URL('/admin', request.url))
+      if (role === 'cnc')    return NextResponse.redirect(new URL('/cnc', request.url))
     }
   }
 
@@ -75,5 +94,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/expert/:path*', '/dashboard', '/dashboard/:path*', '/subscription'],
+  matcher: ['/admin/:path*', '/expert/:path*', '/cnc/:path*', '/dashboard', '/dashboard/:path*', '/subscription'],
 }

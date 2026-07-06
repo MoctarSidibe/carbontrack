@@ -26,9 +26,11 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
          cr.audit_checklist, cr.audit_scheduled_date, cr.audit_location,
          cr.inspection_confirmed, cr.inspection_proposed_date, cr.inspection_proposed_by,
          cr.submitted_to_ogec_at, cr.ogec_reference,
-         cr.avis_number, cr.avis_date, cr.avis_pdf_url,
-         cr.avis_period_start, cr.avis_period_end, cr.avis_total_co2eq,
-         cr.expert_report_pdf_url, cr.dossier_compiled_at,
+          cr.avis_number, cr.avis_date, cr.avis_pdf_url,
+          cr.avis_period_start, cr.avis_period_end, cr.avis_total_co2eq,
+          cr.expert_report_pdf_url, cr.dossier_compiled_at,
+          cr.cnc_user_id, cr.submitted_to_cnc_at, cr.cnc_reviewed_at, cr.cnc_notes,
+          cr.cnc_certificate_pdf_url, cr.cnc_certificate_generated_at, cr.cnc_certificate_number,
          a.id as assessment_id, a.name as assessment_name, a.year as assessment_year,
          a.total_co2eq, a.scope1_co2eq, a.scope2_co2eq, a.scope3_co2eq,
          a.approach,
@@ -143,6 +145,13 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       avisTotalCo2eq: r.avis_total_co2eq ? parseFloat(r.avis_total_co2eq) : null,
       expertReportPdfUrl: r.expert_report_pdf_url,
       dossierCompiledAt: r.dossier_compiled_at,
+      cncUserId: r.cnc_user_id,
+      submittedToCncAt: r.submitted_to_cnc_at,
+      cncReviewedAt: r.cnc_reviewed_at,
+      cncNotes: r.cnc_notes,
+      cncCertificatePdfUrl: r.cnc_certificate_pdf_url,
+      cncCertificateGeneratedAt: r.cnc_certificate_generated_at,
+      cncCertificateNumber: r.cnc_certificate_number,
       certifiedAt: r.certified_at, certificateNumber: r.certificate_number,
       rejectionReason: r.rejection_reason, adminNotes: r.admin_notes,
       companyMessage: r.company_message,
@@ -405,6 +414,56 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
           'cert_validated',
           '🎉 Bilan carbone certifié !',
           `Votre bilan "${cInfo.rows[0].assessment_name}" a été certifié (N° ${cInfo.rows[0].certificate_number}).`,
+          `/dashboard/certifications`
+        )
+      }
+
+    } else if (action === 'send_to_cnc') {
+      const { cncUserId, adminNotes } = body
+      if (!cncUserId) {
+        return NextResponse.json({ error: 'Sélectionnez un membre CNC' }, { status: 400 })
+      }
+
+      const cncResult = await query(
+        `SELECT first_name, last_name, email FROM users WHERE id = $1 AND role = 'cnc'`,
+        [cncUserId]
+      )
+      if (cncResult.rows.length === 0) {
+        return NextResponse.json({ error: 'Membre CNC introuvable' }, { status: 404 })
+      }
+
+      await query(
+        `UPDATE certification_requests
+         SET status = 'submitted_to_cnc',
+             cnc_user_id = $1,
+             submitted_to_cnc_at = NOW(),
+             admin_notes = COALESCE($2, admin_notes),
+             updated_at = NOW()
+         WHERE id = $3`,
+        [cncUserId, adminNotes || null, certId]
+      )
+
+      const scInfo = await query(
+        `SELECT cr.company_id, a.name as assessment_name, c.name as company_name
+         FROM certification_requests cr
+         JOIN assessments a ON a.id = cr.assessment_id
+         JOIN companies c ON c.id = cr.company_id
+         WHERE cr.id = $1`, [certId]
+      )
+      if (scInfo.rows.length > 0) {
+        const { company_id, assessment_name, company_name } = scInfo.rows[0]
+        await createNotification(
+          cncUserId,
+          'cert_assigned',
+          'Nouveau dossier à certifier',
+          `Le dossier de ${company_name} — "${assessment_name}" vous a été soumis pour certification finale.`,
+          `/cnc/certifications/${certId}`
+        )
+        await notifyCompanyUsers(
+          company_id,
+          'cert_comment',
+          'Dossier soumis au CNC',
+          `Votre dossier "${assessment_name}" a été soumis au Conseil National du Climat pour certification finale.`,
           `/dashboard/certifications`
         )
       }
