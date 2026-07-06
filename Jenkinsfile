@@ -173,7 +173,7 @@ pipeline {
             full="${APP_ROOT}/releases/${d}"
             if [ "$target" != "$full" ]; then
               echo "Pruning old release: $d"
-              sudo -u ${DEPLOY_USER} rm -rf "$full"
+              sudo rm -rf "$full" 2>/dev/null || sudo -u ${DEPLOY_USER} rm -rf "$full" 2>/dev/null || true
             fi
           done
         '''
