@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Eye, EyeOff, Landmark, AlertCircle, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react'
 
 export default function CncLoginPage() {
   const [email, setEmail] = useState('')
@@ -42,8 +42,8 @@ export default function CncLoginPage() {
     <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Landmark className="w-9 h-9 text-white" />
+          <div className="mx-auto mb-4 flex items-center justify-center">
+            <img src="/cnc-logo.png" alt="CNC Logo" className="w-20 h-20 object-contain" />
           </div>
           <h1 className="text-2xl font-bold text-white">Conseil National du Climat</h1>
           <p className="text-gray-500 mt-1 text-sm">Espace CNC — Certification carbone officielle</p>
