@@ -92,6 +92,9 @@ pipeline {
           # Create the release directory owned by the deployer group
           sudo -u ${DEPLOY_USER} mkdir -p ${RELEASE_DIR}
 
+          # Ensure workspace files are world-readable for the rsync below
+          chmod -R a+r .
+
           # Copy only what the runtime needs (exclude .git + Next.js cache)
           sudo -u ${DEPLOY_USER} rsync -a --delete \
             --exclude='.git' --exclude='.next/cache' --exclude='.env.local' \
