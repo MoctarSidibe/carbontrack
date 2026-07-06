@@ -97,9 +97,11 @@ pipeline {
             --exclude='.git' --exclude='.next/cache' \
             ./ ${RELEASE_DIR}/
 
-          # Link shared env + persistent uploads
+          # Link shared env + persistent uploads + logos
+          sudo -u ${DEPLOY_USER} mkdir -p ${APP_ROOT}/shared/logos
           sudo -u ${DEPLOY_USER} ln -sfn ${SHARED_ENV} ${RELEASE_DIR}/.env.local
           sudo -u ${DEPLOY_USER} ln -sfn ${APP_ROOT}/shared/uploads ${RELEASE_DIR}/public/uploads 2>/dev/null || true
+          sudo -u ${DEPLOY_USER} ln -sfn ${APP_ROOT}/shared/logos ${RELEASE_DIR}/public/logos 2>/dev/null || true
         '''
       }
     }
