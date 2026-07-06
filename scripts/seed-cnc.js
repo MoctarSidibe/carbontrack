@@ -18,13 +18,20 @@ async function main() {
 
   try {
     // Ensure CNC company exists
-    const companyResult = await pool.query(
-      `INSERT INTO companies (name, rccm, sector)
-       VALUES ('Conseil National du Climat', 'CNC-GABON-001', 'Administration publique')
-       ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-       RETURNING id`
+    let companyResult = await pool.query(
+      `SELECT id FROM companies WHERE name = 'Conseil National du Climat'`
     )
-    const companyId = companyResult.rows[0].id
+    let companyId
+    if (companyResult.rows.length === 0) {
+      companyResult = await pool.query(
+        `INSERT INTO companies (name, rccm, sector)
+         VALUES ('Conseil National du Climat', 'CNC-GABON-001', 'Administration publique')
+         RETURNING id`
+      )
+      companyId = companyResult.rows[0].id
+    } else {
+      companyId = companyResult.rows[0].id
+    }
     console.log(`✅ CNC company: id=${companyId}`)
 
     // Create default CNC user
